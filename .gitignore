@@ -28,5 +28,5 @@ Thumbs.db
 /data/
 *.local.json
 
-# Temporary docx unpack
-**/_unzipped/
+# Saved copies from the app
+*_kopie.docx
