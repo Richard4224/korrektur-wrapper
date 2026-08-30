@@ -3,7 +3,7 @@ import type { Finding } from "./types";
 
 export type Decision = {
   findingId: string;
-  kind: "replace" | "keep";
+  kind: "replace" | "keep" | "skip";
   value?: string;
 };
 
@@ -38,6 +38,23 @@ export function correctionMarks(
       ...finding,
       id: `corrected-${finding.id}`,
       quote: decision.value,
+    });
+  }
+  return marks;
+}
+
+export function skippedMarks(
+  findings: Finding[],
+  decisions: Decision[],
+): Finding[] {
+  const marks: Finding[] = [];
+  for (const decision of decisions) {
+    if (decision.kind !== "skip") continue;
+    const finding = findings.find((item) => item.id === decision.findingId);
+    if (!finding) continue;
+    marks.push({
+      ...finding,
+      id: `skipped-${finding.id}`,
     });
   }
   return marks;

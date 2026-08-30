@@ -8,6 +8,7 @@ import { parseDocumentXml, plainText } from "../docx/parseDocument";
 import {
   correctionMarks,
   replacementsFromDecisions,
+  skippedMarks,
 } from "./decisions";
 import type { Finding } from "./types";
 
@@ -74,5 +75,18 @@ describe("replacementsFromDecisions", () => {
         ],
       ).map((mark) => mark.quote),
     ).toEqual(["Fenster", "abgerissen"]);
+  });
+
+  it("lässt übersprungene Stellen unverändert und merkt sie separat", () => {
+    expect(
+      replacementsFromDecisions(findings, [
+        { findingId: "f1", kind: "skip" },
+      ]),
+    ).toEqual([]);
+    expect(
+      skippedMarks(findings, [{ findingId: "f1", kind: "skip" }]).map(
+        (mark) => mark.quote,
+      ),
+    ).toEqual(["Fenser"]);
   });
 });

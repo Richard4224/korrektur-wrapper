@@ -16,6 +16,7 @@ import { loadApiKey } from "./proofread/apiKey";
 import {
   correctionMarks,
   replacementsFromDecisions,
+  skippedMarks,
   type Decision,
 } from "./proofread/decisions";
 import type { Finding } from "./proofread/types";
@@ -48,6 +49,7 @@ export default function App() {
   }, [doc, findings, decisions]);
 
   const corrected = correctionMarks(findings, decisions);
+  const skipped = skippedMarks(findings, decisions);
 
   function resetReview() {
     setFindings([]);
@@ -264,6 +266,12 @@ export default function App() {
               { findingId: currentFinding.id, kind: "keep" },
             ])
           }
+          onSkip={() =>
+            setDecisions((prev) => [
+              ...prev,
+              { findingId: currentFinding.id, kind: "skip" },
+            ])
+          }
         />
       )}
 
@@ -287,6 +295,7 @@ export default function App() {
             fullText={preview.text}
             findings={remainingFindings}
             corrected={corrected}
+            skipped={skipped}
             currentId={currentFinding?.id ?? null}
           />
         )}

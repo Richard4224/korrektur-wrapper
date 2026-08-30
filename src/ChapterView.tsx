@@ -7,7 +7,7 @@ type Mark = {
   id: string;
   start: number;
   end: number;
-  kind: "finding" | "corrected";
+  kind: "finding" | "corrected" | "skipped";
 };
 
 function marksInBlock(
@@ -16,6 +16,7 @@ function marksInBlock(
   fullText: string,
   findings: Finding[],
   corrected: Finding[],
+  skipped: Finding[],
 ): Mark[] {
   const blockEnd = blockStart + blockLength;
   const marks: Mark[] = [];
@@ -35,6 +36,7 @@ function marksInBlock(
       kind,
     });
   };
+  for (const item of skipped) add(item, "skipped");
   for (const item of corrected) add(item, "corrected");
   for (const finding of findings) add(finding, "finding");
   return marks;
@@ -78,6 +80,7 @@ function BlockView({
   fullText,
   findings,
   corrected,
+  skipped,
   currentId,
 }: {
   block: Block;
@@ -85,6 +88,7 @@ function BlockView({
   fullText: string;
   findings: Finding[];
   corrected: Finding[];
+  skipped: Finding[];
   currentId: string | null;
 }) {
   const Tag = block.kind === "heading" ? "h2" : "p";
@@ -95,6 +99,7 @@ function BlockView({
     fullText,
     findings,
     corrected,
+    skipped,
   );
   let runStart = 0;
   return (
@@ -108,6 +113,8 @@ function BlockView({
           if (run.bold) node = <strong>{node}</strong>;
           if (segment.mark?.kind === "corrected") {
             node = <mark className="corrected">{node}</mark>;
+          } else if (segment.mark?.kind === "skipped") {
+            node = <mark className="skipped">{node}</mark>;
           } else if (segment.mark) {
             node = (
               <mark
@@ -133,12 +140,14 @@ export function ChapterView({
   fullText,
   findings,
   corrected,
+  skipped,
   currentId,
 }: {
   blocks: Block[];
   fullText: string;
   findings: Finding[];
   corrected: Finding[];
+  skipped: Finding[];
   currentId: string | null;
 }) {
   let offset = 0;
@@ -156,6 +165,7 @@ export function ChapterView({
             fullText={fullText}
             findings={findings}
             corrected={corrected}
+            skipped={skipped}
             currentId={currentId}
           />
         );

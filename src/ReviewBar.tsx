@@ -7,12 +7,14 @@ export function ReviewBar({
   total,
   onReplace,
   onKeep,
+  onSkip,
 }: {
   finding: Finding;
   index: number;
   total: number;
   onReplace: (value: string) => void;
   onKeep: () => void;
+  onSkip: () => void;
 }) {
   const [custom, setCustom] = useState("");
 
@@ -62,6 +64,9 @@ export function ReviewBar({
       <div className="actions">
         <button type="button" className="btn keep" onClick={onKeep}>
           Kein Fehler
+        </button>
+        <button type="button" className="btn skip" onClick={onSkip}>
+          Überspringen
         </button>
       </div>
     </section>

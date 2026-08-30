@@ -213,6 +213,10 @@
   background: #e8f5e9;
 }
 
+.btn.skip {
+  background: #ffe0b2;
+}
+
 mark.finding {
   background: #ffe58a;
   padding: 0 0.12em;
@@ -222,6 +226,12 @@ mark.finding {
 mark.finding.current {
   background: #ffbf1a;
   outline: 3px solid #1c1917;
+}
+
+mark.skipped {
+  background: #ff9800;
+  padding: 0 0.12em;
+  color: inherit;
 }
 
 mark.corrected {
