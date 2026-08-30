@@ -116,11 +116,11 @@ function BlockView({
           } else if (segment.mark?.kind === "skipped") {
             node = <mark className="skipped">{node}</mark>;
           } else if (segment.mark) {
+            const isCurrent = segment.mark.id === currentId;
             node = (
               <mark
-                className={
-                  segment.mark.id === currentId ? "finding current" : "finding"
-                }
+                id={isCurrent ? "finding-current" : undefined}
+                className={isCurrent ? "finding current" : "finding"}
               >
                 {node}
               </mark>

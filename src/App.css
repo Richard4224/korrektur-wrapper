@@ -258,6 +258,7 @@ mark.corrected {
 }
 
 .paper {
+  position: relative;
   background: #fffdf8;
   border: 1px solid #e7e0d4;
   border-radius: 0.9rem;
@@ -265,6 +266,27 @@ mark.corrected {
   font-family: Georgia, "Times New Roman", serif;
   font-size: 1.2rem;
   line-height: 1.7;
+}
+
+.paper-reviewing {
+  padding-bottom: 22rem;
+}
+
+.review-float {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  z-index: 6;
+}
+
+.review-float .review {
+  margin: 0;
+  box-shadow: 0 10px 28px rgba(28, 25, 23, 0.18);
+}
+
+#finding-current {
+  scroll-margin-top: 5rem;
+  scroll-margin-bottom: 20rem;
 }
 
 .empty {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ChapterView } from "./ChapterView";
 import { ReviewBar } from "./ReviewBar";
 import { ApiKeyPanel } from "./ApiKeyPanel";
@@ -35,6 +35,8 @@ export default function App() {
   const [dragging, setDragging] = useState(false);
   const [apiKey, setApiKey] = useState(() => loadApiKey());
   const [model, setModel] = useState(() => loadModel());
+  const paperRef = useRef<HTMLElement>(null);
+  const [reviewTop, setReviewTop] = useState(0);
 
   const currentIndex = decisions.length;
   const currentFinding = findings[currentIndex] ?? null;
@@ -131,6 +133,17 @@ export default function App() {
       window.removeEventListener("drop", onDrop);
     };
   }, []);
+
+  useLayoutEffect(() => {
+    if (!currentFinding) return;
+    const mark = document.getElementById("finding-current");
+    const paper = paperRef.current;
+    if (!mark || !paper) return;
+    const markRect = mark.getBoundingClientRect();
+    const paperRect = paper.getBoundingClientRect();
+    setReviewTop(markRect.bottom - paperRect.top + 10);
+    mark.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [currentFinding, preview?.text]);
 
   async function onPruefen() {
     if (!doc) return;
@@ -259,32 +272,6 @@ export default function App() {
         {error && <p className="error">{error}</p>}
       </header>
 
-      {currentFinding && (
-        <ReviewBar
-          finding={currentFinding}
-          index={currentIndex}
-          total={findings.length}
-          onReplace={(value) =>
-            setDecisions((prev) => [
-              ...prev,
-              { findingId: currentFinding.id, kind: "replace", value },
-            ])
-          }
-          onKeep={() =>
-            setDecisions((prev) => [
-              ...prev,
-              { findingId: currentFinding.id, kind: "keep" },
-            ])
-          }
-          onSkip={() =>
-            setDecisions((prev) => [
-              ...prev,
-              { findingId: currentFinding.id, kind: "skip" },
-            ])
-          }
-        />
-      )}
-
       {reviewDone && (
         <p className="done">
           Alle Stellen sind durch. Über „Speichern unter“ die korrigierte Datei
@@ -292,7 +279,11 @@ export default function App() {
         </p>
       )}
 
-      <main className="paper" aria-live="polite">
+      <main
+        className={currentFinding ? "paper paper-reviewing" : "paper"}
+        ref={paperRef}
+        aria-live="polite"
+      >
         {!doc && (
           <p className="empty">
             Noch keine Datei. Über „Datei öffnen“ eine .docx wählen oder die
@@ -308,6 +299,33 @@ export default function App() {
             skipped={skipped}
             currentId={currentFinding?.id ?? null}
           />
+        )}
+        {currentFinding && (
+          <div className="review-float" style={{ top: reviewTop }}>
+            <ReviewBar
+              finding={currentFinding}
+              index={currentIndex}
+              total={findings.length}
+              onReplace={(value) =>
+                setDecisions((prev) => [
+                  ...prev,
+                  { findingId: currentFinding.id, kind: "replace", value },
+                ])
+              }
+              onKeep={() =>
+                setDecisions((prev) => [
+                  ...prev,
+                  { findingId: currentFinding.id, kind: "keep" },
+                ])
+              }
+              onSkip={() =>
+                setDecisions((prev) => [
+                  ...prev,
+                  { findingId: currentFinding.id, kind: "skip" },
+                ])
+              }
+            />
+          </div>
         )}
       </main>
     </div>
