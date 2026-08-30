@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChapterView } from "./ChapterView";
 import { ReviewBar } from "./ReviewBar";
 import { applyReplacements } from "./docx/applyReplacement";
@@ -6,6 +6,7 @@ import {
   bytesWithDocumentXml,
   downloadDocx,
   loadDocxFile,
+  pickDocxFile,
   type LoadedDoc,
 } from "./docx/loadDocx";
 import { parseDocumentXml, plainText } from "./docx/parseDocument";
@@ -26,6 +27,7 @@ export default function App() {
   const [status, setStatus] = useState<string | null>(null);
   const [findings, setFindings] = useState<Finding[]>([]);
   const [decisions, setDecisions] = useState<Decision[]>([]);
+  const [dragging, setDragging] = useState(false);
 
   const currentIndex = decisions.length;
   const currentFinding = findings[currentIndex] ?? null;
@@ -69,6 +71,58 @@ export default function App() {
       if (inputRef.current) inputRef.current.value = "";
     }
   }
+
+  const onFileRef = useRef(onFile);
+  onFileRef.current = onFile;
+
+  useEffect(() => {
+    let depth = 0;
+    function hasFiles(event: DragEvent): boolean {
+      return event.dataTransfer?.types.includes("Files") ?? false;
+    }
+    function onDragEnter(event: DragEvent) {
+      if (!hasFiles(event)) return;
+      event.preventDefault();
+      depth += 1;
+      setDragging(true);
+    }
+    function onDragOver(event: DragEvent) {
+      if (!hasFiles(event)) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+    }
+    function onDragLeave(event: DragEvent) {
+      if (!hasFiles(event)) return;
+      depth -= 1;
+      if (depth <= 0) {
+        depth = 0;
+        setDragging(false);
+      }
+    }
+    function onDrop(event: DragEvent) {
+      event.preventDefault();
+      depth = 0;
+      setDragging(false);
+      const file = pickDocxFile(event.dataTransfer?.files);
+      if (file) {
+        void onFileRef.current(file);
+        return;
+      }
+      if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+        setError("Bitte eine Word-Datei mit der Endung .docx ablegen.");
+      }
+    }
+    window.addEventListener("dragenter", onDragEnter);
+    window.addEventListener("dragover", onDragOver);
+    window.addEventListener("dragleave", onDragLeave);
+    window.addEventListener("drop", onDrop);
+    return () => {
+      window.removeEventListener("dragenter", onDragEnter);
+      window.removeEventListener("dragover", onDragOver);
+      window.removeEventListener("dragleave", onDragLeave);
+      window.removeEventListener("drop", onDrop);
+    };
+  }, []);
 
   async function onPruefen() {
     if (!doc) return;
@@ -117,6 +171,9 @@ export default function App() {
 
   return (
     <div className="page">
+      {dragging && (
+        <div className="drop-overlay">Datei hier ablegen</div>
+      )}
       <header className="top">
         <h1>Korrektur Wrapper</h1>
         <p className="lead">
@@ -192,8 +249,8 @@ export default function App() {
       <main className="paper" aria-live="polite">
         {!doc && (
           <p className="empty">
-            Noch keine Datei. Über „Datei öffnen“ eine .docx wählen — zum
-            Testen eignet sich Novemberlicht.
+            Noch keine Datei. Über „Datei öffnen“ eine .docx wählen oder die
+            Datei ins Fenster ziehen — zum Testen eignet sich Novemberlicht.
           </p>
         )}
         {doc && preview && (

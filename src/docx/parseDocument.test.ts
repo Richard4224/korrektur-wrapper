@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { copyFileName, loadDocxFromBytes } from "./loadDocx";
+import { copyFileName, loadDocxFromBytes, pickDocxFile } from "./loadDocx";
 import { parseDocumentXml, plainText } from "./parseDocument";
 
 const fixture = path.resolve(
@@ -46,6 +46,15 @@ describe("Novemberlicht.docx", () => {
 
   it("speichert unter einem neuen Dateinamen, Original bleibt", () => {
     expect(copyFileName("Novemberlicht.docx")).toBe("Novemberlicht_kopie.docx");
+  });
+
+  it("nimmt aus mehreren Dateien die Word-Datei", () => {
+    const files = [
+      new File(["x"], "notiz.txt"),
+      new File(["x"], "Novemberlicht.docx"),
+    ];
+    expect(pickDocxFile(files)?.name).toBe("Novemberlicht.docx");
+    expect(pickDocxFile([new File(["x"], "foto.png")])).toBeUndefined();
   });
 
   it("lehnt kaputtes XML ab", () => {

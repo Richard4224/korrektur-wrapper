@@ -34,6 +34,13 @@ export async function loadDocxFile(file: File): Promise<LoadedDoc> {
   return loadDocxFromBytes(bytes, file.name);
 }
 
+export function pickDocxFile(
+  files: FileList | File[] | null | undefined,
+): File | undefined {
+  if (!files) return undefined;
+  return [...files].find((file) => file.name.toLowerCase().endsWith(".docx"));
+}
+
 export function copyFileName(fileName: string): string {
   return fileName.replace(/\.docx$/i, "") + "_kopie.docx";
 }

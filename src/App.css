@@ -4,6 +4,20 @@
   padding: 1.5rem 1.25rem 4rem;
 }
 
+.drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(28, 25, 23, 0.78);
+  color: #f4efe6;
+  font-size: 2rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
 .top {
   margin-bottom: 1.5rem;
 }
