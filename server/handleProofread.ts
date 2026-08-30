@@ -21,21 +21,25 @@ export async function handleProofread(
   res: ServerResponse,
   env: Record<string, string>,
 ): Promise<void> {
-  const apiKey = env.OPENAI_API_KEY ?? "";
-  if (!apiKey) {
-    sendJson(res, 503, {
-      error:
-        "Es fehlt der API-Schlüssel. In der Datei .env OPENAI_API_KEY eintragen und die App neu starten.",
-    });
-    return;
-  }
-
   let text = "";
+  let apiKey = env.OPENAI_API_KEY ?? "";
   try {
-    const parsed = JSON.parse(await readBody(req)) as { text?: unknown };
+    const parsed = JSON.parse(await readBody(req)) as {
+      text?: unknown;
+      apiKey?: unknown;
+    };
     text = typeof parsed.text === "string" ? parsed.text.trim() : "";
+    if (typeof parsed.apiKey === "string" && parsed.apiKey.trim()) {
+      apiKey = parsed.apiKey.trim();
+    }
   } catch {
     sendJson(res, 400, { error: "Die Anfrage war unlesbar." });
+    return;
+  }
+  if (!apiKey) {
+    sendJson(res, 503, {
+      error: "Bitte oben einen API-Schlüssel einfügen.",
+    });
     return;
   }
   if (!text) {

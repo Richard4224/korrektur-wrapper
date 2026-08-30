@@ -11,6 +11,7 @@ import {
 } from "./docx/loadDocx";
 import { parseDocumentXml, plainText } from "./docx/parseDocument";
 import { pruefenKapitel } from "./proofread/api";
+import { loadApiKey, saveApiKey } from "./proofread/apiKey";
 import {
   correctionMarks,
   replacementsFromDecisions,
@@ -28,6 +29,7 @@ export default function App() {
   const [findings, setFindings] = useState<Finding[]>([]);
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [apiKey, setApiKey] = useState(() => loadApiKey());
 
   const currentIndex = decisions.length;
   const currentFinding = findings[currentIndex] ?? null;
@@ -132,7 +134,7 @@ export default function App() {
     setFindings([]);
     setDecisions([]);
     try {
-      const next = await pruefenKapitel(plainText(doc.blocks));
+      const next = await pruefenKapitel(plainText(doc.blocks), apiKey);
       setFindings(next);
       setStatus(
         next.length === 0
@@ -213,6 +215,24 @@ export default function App() {
             Zurück
           </button>
         </div>
+        <label className="api-key">
+          API-Schlüssel
+          <input
+            className="api-key-input"
+            value={apiKey}
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="einfügen oder austauschen"
+            onChange={(event) => {
+              const value = event.target.value;
+              setApiKey(value);
+              saveApiKey(value.trim());
+            }}
+          />
+        </label>
+        <p className="api-hint">
+          Zum Austauschen einfach überschreiben. Bleibt nur auf diesem Rechner.
+        </p>
         <input
           ref={inputRef}
           className="file-hidden"
