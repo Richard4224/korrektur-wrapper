@@ -19,6 +19,13 @@ export function sanitizeModel(value: string): string {
   return trimmed;
 }
 
+export function modelAllowsTemperature(model: string): boolean {
+  const id = model.toLowerCase();
+  if (id.startsWith("gpt-5")) return false;
+  if (/^o[1-9]/.test(id)) return false;
+  return true;
+}
+
 export function loadModel(): string {
   try {
     return sanitizeModel(localStorage.getItem(STORAGE_KEY) ?? DEFAULT_MODEL);

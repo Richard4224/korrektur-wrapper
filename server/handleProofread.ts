@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { chunkText } from "../src/proofread/chunk";
-import { sanitizeModel } from "../src/proofread/models";
+import { modelAllowsTemperature, sanitizeModel } from "../src/proofread/models";
 import { normalizeFindings, SYSTEM_PROMPT } from "../src/proofread/normalize";
 import type { Finding } from "../src/proofread/types";
 
@@ -25,26 +25,29 @@ async function proofreadChunk(
   apiKey: string,
   model: string,
 ): Promise<Finding[]> {
+  const payload: Record<string, unknown> = {
+    model,
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      {
+        role: "user",
+        content:
+          "Neue, unabhängige Prüfung. Nur dieser Abschnitt, ohne Bezug zu anderen Teilen:\n\n" +
+          chunk,
+      },
+    ],
+  };
+  if (modelAllowsTemperature(model)) {
+    payload.temperature = 0.1;
+  }
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.1,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        {
-          role: "user",
-          content:
-            "Neue, unabhängige Prüfung. Nur dieser Abschnitt, ohne Bezug zu anderen Teilen:\n\n" +
-            chunk,
-        },
-      ],
-    }),
+    body: JSON.stringify(payload),
     signal: AbortSignal.timeout(120_000),
   });
   const payload = (await response.json()) as {
