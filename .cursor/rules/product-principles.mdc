@@ -1,0 +1,14 @@
+---
+description: Produktziel und harte Constraints für Korrektur Wrapper
+alwaysApply: true
+---
+
+# Produktprinzipien
+
+Oma bedient die App selbst: große Klickflächen, eine Entscheidung pro Schritt, alles auf Deutsch, keine Entwickler-Einstellungen in der Oberfläche.
+
+Lieber zu viel markieren als zu wenig. Ein Klick auf „Kein Fehler“ ist akzeptabel; ein übersehener Fehler im Buch nicht. Trotzdem kein Stil-Lektorat: keine Satzumschriften, keine Duden-Glättung, keine „besseren“ Formulierungen. Nur die markierte Stelle. Deutsch ist die Sprache, gelegentlich andere Sprachen und seltene/neu geschaffene Begriffe — die sind oft Absicht, können aber trotzdem vertippt sein.
+
+Cloud-KI über API ist erlaubt (nicht zum Training). Manuskripte nicht ins Git. Entwickler-Rechner hat kein Word; `docx` nur als ZIP/XML anfassen (Text in bestehenden `w:t`-Knoten ersetzen). Nie über HTML rundreisen. Originaldatei nie still überschreiben.
+
+Lokale Web-App, per Lesezeichen nutzbar. Nicht als erstes eine native Windows-GUI oder ein Word-Add-in bauen.
