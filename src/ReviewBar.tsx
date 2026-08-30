@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
 import type { Finding } from "./proofread/types";
 
 export function clampReviewShift(
@@ -26,9 +26,11 @@ function clampNumber(value: number, min: number, max: number): number {
 
 export function ReviewFloat({
   top,
+  resetKey,
   children,
 }: {
   top: number;
+  resetKey?: string;
   children: ReactNode;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -41,6 +43,12 @@ export function ReviewFloat({
   } | null>(null);
   const [shift, setShift] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
+
+  useLayoutEffect(() => {
+    dragRef.current = null;
+    setDragging(false);
+    setShift({ x: 0, y: 0 });
+  }, [resetKey]);
 
   function clamped(next: { x: number; y: number }) {
     const box = boxRef.current;

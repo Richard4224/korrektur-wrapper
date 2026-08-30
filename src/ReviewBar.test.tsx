@@ -112,4 +112,72 @@ describe("ReviewFloat", () => {
 
     expect(box.style.transform).toBe("translate(60px, 30px)");
   });
+
+  it("setzt die Verschiebung zurück, wenn die nächste Stelle kommt", async () => {
+    if (typeof PointerEvent === "undefined") {
+      globalThis.PointerEvent = class PointerEvent extends MouseEvent {
+        pointerId: number;
+        constructor(
+          type: string,
+          init: MouseEventInit & { pointerId?: number } = {},
+        ) {
+          super(type, init);
+          this.pointerId = init.pointerId ?? 0;
+        }
+      } as typeof PointerEvent;
+    }
+    const proto = HTMLElement.prototype as HTMLElement & {
+      setPointerCapture?: (id: number) => void;
+      releasePointerCapture?: (id: number) => void;
+      hasPointerCapture?: (id: number) => boolean;
+    };
+    proto.setPointerCapture ??= () => undefined;
+    proto.releasePointerCapture ??= () => undefined;
+    proto.hasPointerCapture ??= () => false;
+
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+
+    await act(async () => {
+      root?.render(
+        <ReviewFloat top={40} resetKey="f1">
+          <div className="review-drag">Zur Seite ziehen</div>
+        </ReviewFloat>,
+      );
+    });
+
+    const handle = container.querySelector(".review-drag") as HTMLElement;
+    const box = () => container?.querySelector(".review-float") as HTMLElement;
+
+    await act(async () => {
+      handle.dispatchEvent(
+        new PointerEvent("pointerdown", {
+          bubbles: true,
+          button: 0,
+          pointerId: 1,
+          clientX: 100,
+          clientY: 80,
+        }),
+      );
+      box().dispatchEvent(
+        new PointerEvent("pointermove", {
+          bubbles: true,
+          pointerId: 1,
+          clientX: 160,
+          clientY: 110,
+        }),
+      );
+    });
+    expect(box().style.transform).toBe("translate(60px, 30px)");
+
+    await act(async () => {
+      root?.render(
+        <ReviewFloat top={120} resetKey="f2">
+          <div className="review-drag">Zur Seite ziehen</div>
+        </ReviewFloat>,
+      );
+    });
+    expect(box().style.transform).toBe("translate(0px, 0px)");
+  });
 });

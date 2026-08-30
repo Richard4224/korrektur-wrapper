@@ -366,7 +366,7 @@ export default function App() {
           />
         )}
         {currentFinding && (
-          <ReviewFloat top={reviewTop}>
+          <ReviewFloat top={reviewTop} resetKey={currentFinding.id}>
             <ReviewBar
               finding={currentFinding}
               index={currentIndex}
