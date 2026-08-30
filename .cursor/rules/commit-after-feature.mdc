@@ -1,0 +1,15 @@
+---
+description: Nach jedem abgeschlossenen Feature sofort einen Git-Commit erstellen
+alwaysApply: true
+---
+
+# Nach jedem Feature committen
+
+Sobald ein Feature, eine abgeschlossene Verbesserung oder ein klarer Arbeitsschritt fertig und funktionsfähig ist, sofort einen Git-Commit erstellen — ohne nachzufragen. Diese Projektregel gilt vor der allgemeinen „nur auf Wunsch committen“-Regel.
+
+- Ein Feature = ein Commit. Nicht mehrere Features in einem Commit bündeln.
+- Commit-Message: 1–2 Sätze, Fokus auf das Warum, nicht die Dateiliste.
+- Keine Secrets committen (`.env`, API-Keys, Manuskripte, Zugangsdaten).
+- Keinen Commit bei halbfertiger oder kaputter Arbeit — erst fertigstellen, dann committen.
+- Nur committen, nicht pushen, außer der Nutzer fordert Push explizit.
+- Triviale Tippfehler-Fixes oder reine Formatierung nicht als eigenes „Feature“ committen, wenn sie Teil des laufenden Features sind.
