@@ -1,5 +1,120 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
 import type { Finding } from "./proofread/types";
+
+export function clampReviewShift(
+  shift: { x: number; y: number },
+  card: { width: number; height: number },
+  paper: { width: number; height: number },
+  base: { left: number; top: number },
+  margin = 8,
+): { x: number; y: number } {
+  const minX = margin - base.left;
+  const maxX = paper.width - margin - card.width - base.left;
+  const minY = margin - base.top;
+  const maxY = paper.height - margin - card.height - base.top;
+  return {
+    x: clampNumber(shift.x, minX, maxX),
+    y: clampNumber(shift.y, minY, maxY),
+  };
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return 0;
+  if (min > max) return (min + max) / 2;
+  return Math.min(Math.max(value, min), max);
+}
+
+export function ReviewFloat({
+  top,
+  children,
+}: {
+  top: number;
+  children: ReactNode;
+}) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    originX: number;
+    originY: number;
+  } | null>(null);
+  const [shift, setShift] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+
+  function clamped(next: { x: number; y: number }) {
+    const box = boxRef.current;
+    const paper = box?.offsetParent;
+    if (!(box instanceof HTMLElement) || !(paper instanceof HTMLElement)) {
+      return next;
+    }
+    return clampReviewShift(
+      next,
+      { width: box.offsetWidth, height: box.offsetHeight },
+      { width: paper.clientWidth, height: paper.clientHeight },
+      { left: box.offsetLeft, top: box.offsetTop },
+    );
+  }
+
+  function onPointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return;
+    if (!(event.target instanceof Element)) return;
+    if (!event.target.closest(".review-drag")) return;
+    event.preventDefault();
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: shift.x,
+      originY: shift.y,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDragging(true);
+  }
+
+  function onPointerMove(event: PointerEvent<HTMLDivElement>) {
+    const drag = dragRef.current;
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    setShift(
+      clamped({
+        x: drag.originX + (event.clientX - drag.startX),
+        y: drag.originY + (event.clientY - drag.startY),
+      }),
+    );
+  }
+
+  function endDrag(event: PointerEvent<HTMLDivElement>) {
+    const drag = dragRef.current;
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    dragRef.current = null;
+    setDragging(false);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  return (
+    <div
+      ref={boxRef}
+      className={dragging ? "review-float is-dragging" : "review-float"}
+      style={{
+        top,
+        transform: `translate(${shift.x}px, ${shift.y}px)`,
+      }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onDoubleClick={(event) => {
+        if (!(event.target instanceof Element)) return;
+        if (!event.target.closest(".review-drag")) return;
+        setShift({ x: 0, y: 0 });
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 export function UndoButton({
   disabled,
@@ -65,6 +180,15 @@ export function ReviewBar({
 
   return (
     <section className="review" aria-live="polite">
+      <div
+        className="review-drag"
+        role="group"
+        aria-label="Zur Seite ziehen"
+        title="Anfassen und zur Seite ziehen. Doppelklick setzt es zurück."
+      >
+        <span className="review-drag-grip" aria-hidden="true" />
+        Zur Seite ziehen
+      </div>
       <div className="review-head">
         <p className="review-progress">
           Stelle {index + 1} von {total}

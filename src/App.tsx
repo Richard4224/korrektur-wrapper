@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ChapterView } from "./ChapterView";
-import { ReviewBar, UndoButton } from "./ReviewBar";
+import { ReviewBar, ReviewFloat, UndoButton } from "./ReviewBar";
 import { ApiKeyPanel } from "./ApiKeyPanel";
 import { ModelSelect } from "./ModelSelect";
 import { applyParagraphTexts, applyReplacements } from "./docx/applyReplacement";
@@ -366,7 +366,7 @@ export default function App() {
           />
         )}
         {currentFinding && (
-          <div className="review-float" style={{ top: reviewTop }}>
+          <ReviewFloat top={reviewTop}>
             <ReviewBar
               finding={currentFinding}
               index={currentIndex}
@@ -395,7 +395,7 @@ export default function App() {
                 ]);
               }}
             />
-          </div>
+          </ReviewFloat>
         )}
       </main>
     </div>
