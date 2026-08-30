@@ -3,11 +3,12 @@ import type { Finding } from "./types";
 export async function pruefenKapitel(
   text: string,
   apiKey: string,
+  model: string,
 ): Promise<Finding[]> {
   const response = await fetch("/api/pruefen", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, apiKey }),
+    body: JSON.stringify({ text, apiKey, model }),
   });
   const payload = (await response.json()) as {
     error?: string;

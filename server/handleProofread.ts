@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { chunkText } from "../src/proofread/chunk";
+import { sanitizeModel } from "../src/proofread/models";
 import { normalizeFindings, SYSTEM_PROMPT } from "../src/proofread/normalize";
 import type { Finding } from "../src/proofread/types";
 
@@ -66,14 +67,19 @@ export async function handleProofread(
 ): Promise<void> {
   let text = "";
   let apiKey = env.OPENAI_API_KEY ?? "";
+  let requestedModel = "";
   try {
     const parsed = JSON.parse(await readBody(req)) as {
       text?: unknown;
       apiKey?: unknown;
+      model?: unknown;
     };
     text = typeof parsed.text === "string" ? parsed.text.trim() : "";
     if (typeof parsed.apiKey === "string" && parsed.apiKey.trim()) {
       apiKey = parsed.apiKey.trim();
+    }
+    if (typeof parsed.model === "string" && parsed.model.trim()) {
+      requestedModel = parsed.model;
     }
   } catch {
     sendJson(res, 400, { error: "Die Anfrage war unlesbar." });
@@ -90,7 +96,7 @@ export async function handleProofread(
     return;
   }
 
-  const model = env.OPENAI_MODEL || "gpt-4o";
+  const model = sanitizeModel(requestedModel || env.OPENAI_MODEL || "gpt-4o");
   try {
     const chunks = chunkText(text);
     const merged: Finding[] = [];

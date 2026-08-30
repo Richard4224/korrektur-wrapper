@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChapterView } from "./ChapterView";
 import { ReviewBar } from "./ReviewBar";
 import { ApiKeyPanel } from "./ApiKeyPanel";
+import { ModelSelect } from "./ModelSelect";
 import { applyReplacements } from "./docx/applyReplacement";
 import {
   bytesWithDocumentXml,
@@ -13,6 +14,7 @@ import {
 import { parseDocumentXml, plainText } from "./docx/parseDocument";
 import { pruefenKapitel } from "./proofread/api";
 import { loadApiKey } from "./proofread/apiKey";
+import { loadModel, saveModel } from "./proofread/models";
 import {
   correctionMarks,
   replacementsFromDecisions,
@@ -32,6 +34,7 @@ export default function App() {
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [dragging, setDragging] = useState(false);
   const [apiKey, setApiKey] = useState(() => loadApiKey());
+  const [model, setModel] = useState(() => loadModel());
 
   const currentIndex = decisions.length;
   const currentFinding = findings[currentIndex] ?? null;
@@ -137,7 +140,7 @@ export default function App() {
     setFindings([]);
     setDecisions([]);
     try {
-      const next = await pruefenKapitel(plainText(doc.blocks), apiKey);
+      const next = await pruefenKapitel(plainText(doc.blocks), apiKey, model);
       setFindings(next);
       setStatus(
         next.length === 0
@@ -237,6 +240,13 @@ export default function App() {
           </button>
         </div>
         <ApiKeyPanel apiKey={apiKey} onSaved={setApiKey} />
+        <ModelSelect
+          model={model}
+          onChange={(value) => {
+            saveModel(value);
+            setModel(value);
+          }}
+        />
         <input
           ref={inputRef}
           className="file-hidden"
