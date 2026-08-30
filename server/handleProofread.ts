@@ -25,7 +25,7 @@ async function proofreadChunk(
   apiKey: string,
   model: string,
 ): Promise<Finding[]> {
-  const payload: Record<string, unknown> = {
+  const requestBody: Record<string, unknown> = {
     model,
     response_format: { type: "json_object" },
     messages: [
@@ -39,7 +39,7 @@ async function proofreadChunk(
     ],
   };
   if (modelAllowsTemperature(model)) {
-    payload.temperature = 0.1;
+    requestBody.temperature = 0.1;
   }
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -47,7 +47,7 @@ async function proofreadChunk(
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(requestBody),
     signal: AbortSignal.timeout(120_000),
   });
   const payload = (await response.json()) as {
