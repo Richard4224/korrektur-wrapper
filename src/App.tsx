@@ -1,24 +1,22 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ChapterView } from "./ChapterView";
 import { ReviewBar } from "./ReviewBar";
 import { applyReplacements } from "./docx/applyReplacement";
 import {
   bytesWithDocumentXml,
-  documentXmlFromBytes,
   downloadDocx,
   loadDocxFile,
   type LoadedDoc,
 } from "./docx/loadDocx";
-import { plainText } from "./docx/parseDocument";
+import { parseDocumentXml, plainText } from "./docx/parseDocument";
 import { pruefenKapitel } from "./proofread/api";
+import {
+  lastReplacementMark,
+  replacementsFromDecisions,
+  type Decision,
+} from "./proofread/decisions";
 import type { Finding } from "./proofread/types";
 import "./App.css";
-
-type Decision = {
-  findingId: string;
-  kind: "replace" | "keep";
-  value?: string;
-};
 
 export default function App() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -32,7 +30,19 @@ export default function App() {
   const currentIndex = decisions.length;
   const currentFinding = findings[currentIndex] ?? null;
   const reviewDone = findings.length > 0 && currentIndex >= findings.length;
-  const fullText = doc ? plainText(doc.blocks) : "";
+  const remainingFindings = findings.slice(currentIndex);
+
+  const preview = useMemo(() => {
+    if (!doc) return null;
+    const xml = applyReplacements(
+      doc.xml,
+      replacementsFromDecisions(findings, decisions),
+    );
+    const blocks = parseDocumentXml(xml);
+    return { xml, blocks, text: plainText(blocks) };
+  }, [doc, findings, decisions]);
+
+  const corrected = lastReplacementMark(findings, decisions);
 
   function resetReview() {
     setFindings([]);
@@ -88,29 +98,11 @@ export default function App() {
   }
 
   async function onSave() {
-    if (!doc) return;
+    if (!doc || !preview) return;
     setBusy(true);
     setError(null);
     try {
-      const xml = await documentXmlFromBytes(doc.bytes);
-      const replaced = applyReplacements(
-        xml,
-        decisions
-          .filter((decision) => decision.kind === "replace" && decision.value)
-          .map((decision) => {
-            const finding = findings.find(
-              (item) => item.id === decision.findingId,
-            );
-            return {
-              quote: finding?.quote ?? "",
-              replacement: decision.value ?? "",
-              prefix: finding?.prefix ?? "",
-              suffix: finding?.suffix ?? "",
-            };
-          })
-          .filter((item) => item.quote && item.replacement),
-      );
-      const bytes = await bytesWithDocumentXml(doc.bytes, replaced);
+      const bytes = await bytesWithDocumentXml(doc.bytes, preview.xml);
       downloadDocx(doc.fileName, bytes);
     } catch (caught) {
       setError(
@@ -204,11 +196,12 @@ export default function App() {
             Testen eignet sich Novemberlicht.
           </p>
         )}
-        {doc && (
+        {doc && preview && (
           <ChapterView
-            blocks={doc.blocks}
-            fullText={fullText}
-            findings={findings}
+            blocks={preview.blocks}
+            fullText={preview.text}
+            findings={remainingFindings}
+            corrected={corrected}
             currentId={currentFinding?.id ?? null}
           />
         )}

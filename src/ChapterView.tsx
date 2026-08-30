@@ -3,31 +3,40 @@ import type { Block, TextRun } from "./docx/parseDocument";
 import { locateQuote } from "./docx/locateQuote";
 import type { Finding } from "./proofread/types";
 
-type Mark = { id: string; start: number; end: number };
+type Mark = {
+  id: string;
+  start: number;
+  end: number;
+  kind: "finding" | "corrected";
+};
 
 function marksInBlock(
   blockStart: number,
   blockLength: number,
   fullText: string,
   findings: Finding[],
+  corrected: Finding | null,
 ): Mark[] {
   const blockEnd = blockStart + blockLength;
   const marks: Mark[] = [];
-  for (const finding of findings) {
+  const add = (finding: Finding, kind: Mark["kind"]) => {
     const located = locateQuote(
       fullText,
       finding.quote,
       finding.prefix,
       finding.suffix,
     );
-    if (!located) continue;
-    if (located.end <= blockStart || located.start >= blockEnd) continue;
+    if (!located) return;
+    if (located.end <= blockStart || located.start >= blockEnd) return;
     marks.push({
       id: finding.id,
       start: Math.max(0, located.start - blockStart),
       end: Math.min(blockLength, located.end - blockStart),
+      kind,
     });
-  }
+  };
+  if (corrected) add(corrected, "corrected");
+  for (const finding of findings) add(finding, "finding");
   return marks;
 }
 
@@ -35,7 +44,7 @@ function runSegments(
   run: TextRun,
   runStart: number,
   marks: Mark[],
-): { text: string; findingId: string | null }[] {
+): { text: string; mark: Mark | null }[] {
   const points = new Set([0, run.text.length]);
   for (const mark of marks) {
     const start = Math.max(0, mark.start - runStart);
@@ -46,17 +55,18 @@ function runSegments(
     }
   }
   const cuts = [...points].sort((left, right) => left - right);
-  const segments: { text: string; findingId: string | null }[] = [];
+  const segments: { text: string; mark: Mark | null }[] = [];
   for (let index = 0; index < cuts.length - 1; index += 1) {
     const from = cuts[index];
     const to = cuts[index + 1];
     if (from === to) continue;
-    const finding = marks.find(
-      (mark) => runStart + from >= mark.start && runStart + from < mark.end,
-    );
+    const mark =
+      marks.find(
+        (item) => runStart + from >= item.start && runStart + from < item.end,
+      ) ?? null;
     segments.push({
       text: run.text.slice(from, to),
-      findingId: finding?.id ?? null,
+      mark,
     });
   }
   return segments;
@@ -67,17 +77,25 @@ function BlockView({
   blockStart,
   fullText,
   findings,
+  corrected,
   currentId,
 }: {
   block: Block;
   blockStart: number;
   fullText: string;
   findings: Finding[];
+  corrected: Finding | null;
   currentId: string | null;
 }) {
   const Tag = block.kind === "heading" ? "h2" : "p";
   const blockText = block.runs.map((run) => run.text).join("");
-  const marks = marksInBlock(blockStart, blockText.length, fullText, findings);
+  const marks = marksInBlock(
+    blockStart,
+    blockText.length,
+    fullText,
+    findings,
+    corrected,
+  );
   let runStart = 0;
   return (
     <Tag className={block.kind === "heading" ? "chapter-heading" : "chapter-p"}>
@@ -88,13 +106,13 @@ function BlockView({
           let node: ReactNode = segment.text;
           if (run.italic) node = <em>{node}</em>;
           if (run.bold) node = <strong>{node}</strong>;
-          if (segment.findingId) {
+          if (segment.mark?.kind === "corrected") {
+            node = <mark className="corrected">{node}</mark>;
+          } else if (segment.mark) {
             node = (
               <mark
                 className={
-                  segment.findingId === currentId
-                    ? "finding current"
-                    : "finding"
+                  segment.mark.id === currentId ? "finding current" : "finding"
                 }
               >
                 {node}
@@ -114,11 +132,13 @@ export function ChapterView({
   blocks,
   fullText,
   findings,
+  corrected,
   currentId,
 }: {
   blocks: Block[];
   fullText: string;
   findings: Finding[];
+  corrected: Finding | null;
   currentId: string | null;
 }) {
   let offset = 0;
@@ -135,6 +155,7 @@ export function ChapterView({
             blockStart={start}
             fullText={fullText}
             findings={findings}
+            corrected={corrected}
             currentId={currentId}
           />
         );

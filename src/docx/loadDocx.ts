@@ -4,6 +4,7 @@ import { parseDocumentXml, type Block } from "./parseDocument";
 export type LoadedDoc = {
   fileName: string;
   bytes: Uint8Array;
+  xml: string;
   blocks: Block[];
 };
 
@@ -20,6 +21,7 @@ export async function loadDocxFromBytes(
   return {
     fileName,
     bytes,
+    xml,
     blocks: parseDocumentXml(xml),
   };
 }
