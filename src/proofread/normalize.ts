@@ -17,7 +17,8 @@ Nicht als Fehler markieren:
 - Stil, Rhythmus, ungewöhnliche Bilder
 - Wörter, die du nur „schöner“ oder dudenkonformer machen würdest
 
-Pro Fundstelle nur die fehlerhafte Stelle selbst (meist ein Wort, höchstens zwei).
+Pro Fundstelle die fehlerhafte Stelle selbst. Bei Artikel- oder Geschlechtfehlern gehören Artikel und Wort zusammen in quote und in die Vorschläge, z. B. quote "ein Mutprobe", suggestions ["eine Mutprobe", "ein Wagnis", "eine Probe"]. Nie nur das Nomen ersetzen, sonst bleibt das alte „ein“ stehen.
+
 Genau drei Korrekturvorschläge, passend zum literarischen Kontext, alle verschieden, keines davon identisch mit der Fundstelle.
 
 Markiere ein Wort niemals als Fehler für sich selbst (nicht „Waliser“ als Tippfehler für „Waliser“).

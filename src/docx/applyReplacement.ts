@@ -73,6 +73,31 @@ function haystackFrom(pieces: Piece[]): string {
   return pieces.map((piece) => (isBreak(piece) ? "\n" : piece.text)).join("");
 }
 
+function isWordChar(character: string): boolean {
+  return /[\p{L}\p{N}'’\-]/u.test(character);
+}
+
+function previousWordStart(text: string, index: number): number {
+  let cursor = index;
+  while (cursor > 0 && /\s/.test(text[cursor - 1] ?? "")) cursor -= 1;
+  while (cursor > 0 && isWordChar(text[cursor - 1] ?? "")) cursor -= 1;
+  return cursor;
+}
+
+export function expandReplacementRange(
+  haystack: string,
+  located: { start: number; end: number },
+  quote: string,
+  replacement: string,
+): { start: number; end: number } {
+  if (!quote || !replacement.endsWith(quote)) return located;
+  const extra = replacement.slice(0, -quote.length);
+  if (!/^\S+\s+$/u.test(extra)) return located;
+  const start = previousWordStart(haystack, located.start);
+  if (start >= located.start) return located;
+  return { start, end: located.end };
+}
+
 export function applyReplacement(
   xml: string,
   quote: string,
@@ -82,8 +107,14 @@ export function applyReplacement(
 ): string {
   const pieces = collectPieces(xml);
   const haystack = haystackFrom(pieces);
-  const located = locateQuote(haystack, quote, prefix, suffix);
-  if (!located) return xml;
+  const found = locateQuote(haystack, quote, prefix, suffix);
+  if (!found) return xml;
+  const located = expandReplacementRange(
+    haystack,
+    found,
+    quote,
+    replacement,
+  );
 
   type Change = {
     pieceIndex: number;

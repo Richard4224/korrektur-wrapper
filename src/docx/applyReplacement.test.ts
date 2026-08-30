@@ -6,6 +6,7 @@ import JSZip from "jszip";
 import {
   applyReplacement,
   applyReplacements,
+  expandReplacementRange,
   plainTextFromDocumentXml,
 } from "./applyReplacement";
 import { documentXmlFromBytes } from "./loadDocx";
@@ -21,6 +22,33 @@ async function novemberlichtXml(): Promise<string> {
   const bytes = new Uint8Array(readFileSync(fixture));
   return documentXmlFromBytes(bytes);
 }
+
+describe("expandReplacementRange", () => {
+  it("zieht den Artikel vor das Nomen, wenn der Vorschlag ihn schon enthält", () => {
+    const haystack = "nur ein Spiel, ein Mutprobe, kein Romanze.";
+    const start = haystack.indexOf("Mutprobe");
+    expect(
+      expandReplacementRange(
+        haystack,
+        { start, end: start + "Mutprobe".length },
+        "Mutprobe",
+        "eine Mutprobe",
+      ),
+    ).toEqual({
+      start: haystack.indexOf("ein Mutprobe"),
+      end: start + "Mutprobe".length,
+    });
+  });
+
+  it("lässt normale Wort-für-Wort-Korrekturen unverändert", () => {
+    const haystack = "aus dem Fenser gschaut";
+    const start = haystack.indexOf("Fenser");
+    const located = { start, end: start + "Fenser".length };
+    expect(
+      expandReplacementRange(haystack, located, "Fenser", "Fenster"),
+    ).toEqual(located);
+  });
+});
 
 describe("locateQuote", () => {
   it("findet Fenser über den Kontext", () => {
@@ -55,6 +83,36 @@ describe("Novemberlicht ersetzen", () => {
     expect(next).toContain("Zniachtl");
     expect(next).toMatch(/<w:i\/>[\s\S]{0,180}Zniachtl/);
     expect(next).toContain('w:val="Heading1"');
+  });
+
+  it("nimmt das alte ein mit, wenn die Korrektur eine Mutprobe lautet", async () => {
+    const xml = await novemberlichtXml();
+    const next = applyReplacement(
+      xml,
+      "Mutprobe",
+      "eine Mutprobe",
+      "ein Spiel, ein ",
+      ", kein",
+    );
+    const text = plainTextFromDocumentXml(next);
+    expect(text).toContain("ein Spiel, eine Mutprobe");
+    expect(text).not.toContain("ein eine Mutprobe");
+    expect(text).not.toMatch(/ein Mutprobe/);
+  });
+
+  it("nimmt kein mit, wenn die Korrektur keine Romanze lautet", async () => {
+    const xml = await novemberlichtXml();
+    const next = applyReplacement(
+      xml,
+      "Romanze",
+      "keine Romanze",
+      "Mutprobe, kein ",
+      ".",
+    );
+    const text = plainTextFromDocumentXml(next);
+    expect(text).toContain("keine Romanze");
+    expect(text).not.toContain("kein keine Romanze");
+    expect(text).not.toMatch(/kein Romanze/);
   });
 
   it("unterscheidet zwei das-Stellen über den Kontext", async () => {
