@@ -27,3 +27,6 @@ Thumbs.db
 # Local user data (manuscripts, API keys, session)
 /data/
 *.local.json
+
+# Temporary docx unpack
+**/_unzipped/

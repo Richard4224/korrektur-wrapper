@@ -23,3 +23,12 @@ Die KI ist Lektorin, kein Duden: Vorschläge aus dem literarischen Kontext, inkl
 ## Form
 
 Lokale Web-App (Lesezeichen auf dem Entwicklungsrechner). Auf ihrem PC später derselbe Stand als Desktop-Verknüpfung ins Edge-Fenster, ohne Browser-Leiste. Dateien werden im `docx`-XML bearbeitet (nur die betroffene Textstelle), die Formatierung bleibt 1:1. Word dient zum Anlegen und Sichtprüfen der Testdateien, nicht als Teil der App.
+
+## Starten
+
+```bash
+npm install
+npm run dev
+```
+
+Im Browser die angezeigte Adresse als Lesezeichen speichern (meist `http://localhost:5173`). Testdatei: `test_material/Novemberlicht.docx`.
