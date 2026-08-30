@@ -6,7 +6,7 @@ Lokale Software zur KI-gestützten Korrektur literarischer Texte. Die Autorin be
 
 Eine Autorin schreibt lange Bücher (ca. 400 Seiten) in Microsoft Word (`docx`), oft per Diktierfunktion. Ein Kapitel sind typischerweise 20–30 Seiten. Word- und Google-Rechtschreibung scheitern an literarischem Stil, Wortneuschöpfungen, Namen und Wörtern anderer Sprachen.
 
-Die App läuft auf ihrem Windows-Rechner (dort ist Word). Entwickelt wird auf einem anderen Rechner **ohne Word**.
+Die App läuft auf ihrem Windows-Rechner. Entwickelt wird auf einem anderen Rechner, ebenfalls mit Word — aber **ohne ihre Manuskripte**. Testdateien legen wir selbst an (Formatierung, Diktierfehler, erfundene Wörter). Echte Buchdateien kommen nicht ins Git.
 
 ## Ziel
 
@@ -22,4 +22,4 @@ Die KI ist Lektorin, kein Duden: Vorschläge aus dem literarischen Kontext, inkl
 
 ## Form
 
-Lokale Web-App (Lesezeichen auf dem Entwicklungsrechner). Auf ihrem PC später derselbe Stand als Desktop-Verknüpfung ins Edge-Fenster, ohne Browser-Leiste. Kein Word nötig, um Dateien zu öffnen oder zu speichern: Eingriff nur im `docx`-XML, Formatierung bleibt 1:1.
+Lokale Web-App (Lesezeichen auf dem Entwicklungsrechner). Auf ihrem PC später derselbe Stand als Desktop-Verknüpfung ins Edge-Fenster, ohne Browser-Leiste. Dateien werden im `docx`-XML bearbeitet (nur die betroffene Textstelle), die Formatierung bleibt 1:1. Word dient zum Anlegen und Sichtprüfen der Testdateien, nicht als Teil der App.
