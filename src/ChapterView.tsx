@@ -1,6 +1,13 @@
-import type { ReactNode } from "react";
+import {
+  memo,
+  type ClipboardEvent,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import type { Block, TextRun } from "./docx/parseDocument";
 import { locateQuote } from "./docx/locateQuote";
+import { normalizeEditableText } from "./docx/editableText";
 import type { Finding } from "./proofread/types";
 
 type Mark = {
@@ -74,23 +81,34 @@ function runSegments(
   return segments;
 }
 
-function BlockView({
-  block,
-  blockStart,
-  fullText,
-  findings,
-  corrected,
-  skipped,
-  currentId,
-}: {
+type BlockViewProps = {
   block: Block;
   blockStart: number;
+  index: number;
   fullText: string;
   findings: Finding[];
   corrected: Finding[];
   skipped: Finding[];
   currentId: string | null;
-}) {
+  editable: boolean;
+  isFrozen: boolean;
+  onEditingChange: (index: number | null) => void;
+  onCommit: (index: number, text: string) => void;
+};
+
+const BlockView = memo(function BlockView({
+  block,
+  blockStart,
+  index,
+  fullText,
+  findings,
+  corrected,
+  skipped,
+  currentId,
+  editable,
+  onEditingChange,
+  onCommit,
+}: BlockViewProps) {
   const Tag = block.kind === "heading" ? "h2" : "p";
   const blockText = block.runs.map((run) => run.text).join("");
   const marks = marksInBlock(
@@ -102,8 +120,50 @@ function BlockView({
     skipped,
   );
   let runStart = 0;
+
+  function onKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "Enter") event.preventDefault();
+  }
+
+  function onBeforeInput(event: FormEvent<HTMLElement>) {
+    const type = (event.nativeEvent as InputEvent).inputType;
+    if (type === "insertParagraph" || type === "insertLineBreak") {
+      event.preventDefault();
+    }
+    if (type.startsWith("format")) event.preventDefault();
+  }
+
+  function onPaste(event: ClipboardEvent<HTMLElement>) {
+    event.preventDefault();
+    const pasted = normalizeEditableText(
+      event.clipboardData.getData("text/plain"),
+    );
+    if (pasted) document.execCommand("insertText", false, pasted);
+  }
+
   return (
-    <Tag className={block.kind === "heading" ? "chapter-heading" : "chapter-p"}>
+    <Tag
+      className={block.kind === "heading" ? "chapter-heading" : "chapter-p"}
+      data-block-index={index}
+      contentEditable={editable}
+      suppressContentEditableWarning
+      spellCheck={editable}
+      lang="de"
+      aria-label={
+        block.kind === "heading" ? "Überschrift ändern" : "Absatz ändern"
+      }
+      onFocus={() => onEditingChange(index)}
+      onBlur={(event) => {
+        onEditingChange(null);
+        onCommit(
+          index,
+          normalizeEditableText(event.currentTarget.textContent ?? ""),
+        );
+      }}
+      onKeyDown={onKeyDown}
+      onBeforeInput={onBeforeInput}
+      onPaste={onPaste}
+    >
       {block.runs.map((run, runIndex) => {
         const segments = runSegments(run, runStart, marks);
         runStart += run.text.length;
@@ -133,7 +193,19 @@ function BlockView({
       })}
     </Tag>
   );
-}
+}, (prev, next) => {
+  if (next.isFrozen) return true;
+  return (
+    prev.block === next.block &&
+    prev.blockStart === next.blockStart &&
+    prev.fullText === next.fullText &&
+    prev.currentId === next.currentId &&
+    prev.editable === next.editable &&
+    prev.findings === next.findings &&
+    prev.corrected === next.corrected &&
+    prev.skipped === next.skipped
+  );
+});
 
 export function ChapterView({
   blocks,
@@ -142,6 +214,10 @@ export function ChapterView({
   corrected,
   skipped,
   currentId,
+  editable,
+  editingIndex,
+  onEditingChange,
+  onCommit,
 }: {
   blocks: Block[];
   fullText: string;
@@ -149,6 +225,10 @@ export function ChapterView({
   corrected: Finding[];
   skipped: Finding[];
   currentId: string | null;
+  editable: boolean;
+  editingIndex: number | null;
+  onEditingChange: (index: number | null) => void;
+  onCommit: (index: number, text: string) => void;
 }) {
   let offset = 0;
   return (
@@ -162,11 +242,16 @@ export function ChapterView({
             key={index}
             block={block}
             blockStart={start}
+            index={index}
             fullText={fullText}
             findings={findings}
             corrected={corrected}
             skipped={skipped}
             currentId={currentId}
+            editable={editable}
+            isFrozen={editingIndex === index}
+            onEditingChange={onEditingChange}
+            onCommit={onCommit}
           />
         );
       })}

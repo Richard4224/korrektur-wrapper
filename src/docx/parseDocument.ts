@@ -110,3 +110,16 @@ export function plainText(blocks: Block[]): string {
     .map((block) => block.runs.map((run) => run.text).join(""))
     .join("\n");
 }
+
+export function blockIndexAtOffset(
+  blocks: Block[],
+  offset: number,
+): number | null {
+  let cursor = 0;
+  for (let index = 0; index < blocks.length; index += 1) {
+    const length = blocks[index].runs.map((run) => run.text).join("").length;
+    if (offset >= cursor && offset < cursor + length) return index;
+    cursor += length + 1;
+  }
+  return null;
+}

@@ -3,7 +3,8 @@ import { ChapterView } from "./ChapterView";
 import { ReviewBar, UndoButton } from "./ReviewBar";
 import { ApiKeyPanel } from "./ApiKeyPanel";
 import { ModelSelect } from "./ModelSelect";
-import { applyReplacements } from "./docx/applyReplacement";
+import { applyParagraphTexts, applyReplacements } from "./docx/applyReplacement";
+import { normalizeEditableText } from "./docx/editableText";
 import {
   bytesWithDocumentXml,
   downloadDocx,
@@ -11,7 +12,12 @@ import {
   pickDocxFile,
   type LoadedDoc,
 } from "./docx/loadDocx";
-import { parseDocumentXml, plainText } from "./docx/parseDocument";
+import {
+  blockIndexAtOffset,
+  parseDocumentXml,
+  plainText,
+} from "./docx/parseDocument";
+import { locateQuote } from "./docx/locateQuote";
 import { pruefenKapitel } from "./proofread/api";
 import { loadApiKey } from "./proofread/apiKey";
 import { loadModel, saveModel } from "./proofread/models";
@@ -37,6 +43,14 @@ export default function App() {
   const [model, setModel] = useState(() => loadModel());
   const paperRef = useRef<HTMLElement>(null);
   const [reviewTop, setReviewTop] = useState(0);
+  const [paragraphEdits, setParagraphEdits] = useState<Record<number, string>>(
+    {},
+  );
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const paragraphEditsRef = useRef(paragraphEdits);
+  paragraphEditsRef.current = paragraphEdits;
+  const editingIndexRef = useRef(editingIndex);
+  editingIndexRef.current = editingIndex;
 
   const currentIndex = decisions.length;
   const currentFinding = findings[currentIndex] ?? null;
@@ -45,13 +59,16 @@ export default function App() {
 
   const preview = useMemo(() => {
     if (!doc) return null;
-    const xml = applyReplacements(
-      doc.xml,
-      replacementsFromDecisions(findings, decisions),
+    const xml = applyParagraphTexts(
+      applyReplacements(
+        doc.xml,
+        replacementsFromDecisions(findings, decisions),
+      ),
+      paragraphEdits,
     );
     const blocks = parseDocumentXml(xml);
     return { xml, blocks, text: plainText(blocks) };
-  }, [doc, findings, decisions]);
+  }, [doc, findings, decisions, paragraphEdits]);
 
   const corrected = correctionMarks(findings, decisions);
   const skipped = skippedMarks(findings, decisions);
@@ -62,11 +79,57 @@ export default function App() {
     setStatus(null);
   }
 
+  function readLiveParagraphEdits(): Record<number, string> {
+    const next = { ...paragraphEditsRef.current };
+    const index = editingIndexRef.current;
+    if (index === null) return next;
+    const element = document.querySelector(`[data-block-index="${index}"]`);
+    if (!(element instanceof HTMLElement)) return next;
+    const text = normalizeEditableText(element.textContent ?? "");
+    if (text) next[index] = text;
+    else delete next[index];
+    return next;
+  }
+
+  function commitParagraph(index: number, text: string) {
+    setParagraphEdits((prev) => {
+      if (!text) {
+        if (!(index in prev)) return prev;
+        const cleared = { ...prev };
+        delete cleared[index];
+        return cleared;
+      }
+      if (prev[index] === text) return prev;
+      return { ...prev, [index]: text };
+    });
+  }
+
+  function clearEditForFinding(finding: Finding) {
+    if (!preview) return;
+    const located = locateQuote(
+      preview.text,
+      finding.quote,
+      finding.prefix,
+      finding.suffix,
+    );
+    if (!located) return;
+    const blockIndex = blockIndexAtOffset(preview.blocks, located.start);
+    if (blockIndex === null) return;
+    setParagraphEdits((prev) => {
+      if (!(blockIndex in prev)) return prev;
+      const next = { ...prev };
+      delete next[blockIndex];
+      return next;
+    });
+  }
+
   async function onFile(file: File | undefined) {
     if (!file) return;
     setBusy(true);
     setError(null);
     resetReview();
+    setParagraphEdits({});
+    setEditingIndex(null);
     try {
       setDoc(await loadDocxFile(file));
     } catch (caught) {
@@ -153,7 +216,14 @@ export default function App() {
     setFindings([]);
     setDecisions([]);
     try {
-      const next = await pruefenKapitel(plainText(doc.blocks), apiKey, model);
+      const edits = readLiveParagraphEdits();
+      setParagraphEdits(edits);
+      const xml = applyParagraphTexts(doc.xml, edits);
+      const next = await pruefenKapitel(
+        plainText(parseDocumentXml(xml)),
+        apiKey,
+        model,
+      );
       setFindings(next);
       setStatus(
         next.length === 0
@@ -173,11 +243,20 @@ export default function App() {
   }
 
   async function onSave() {
-    if (!doc || !preview) return;
+    if (!doc) return;
     setBusy(true);
     setError(null);
     try {
-      const bytes = await bytesWithDocumentXml(doc.bytes, preview.xml);
+      const edits = readLiveParagraphEdits();
+      setParagraphEdits(edits);
+      const xml = applyParagraphTexts(
+        applyReplacements(
+          doc.xml,
+          replacementsFromDecisions(findings, decisions),
+        ),
+        edits,
+      );
+      const bytes = await bytesWithDocumentXml(doc.bytes, xml);
       downloadDocx(doc.fileName, bytes);
     } catch (caught) {
       setError(
@@ -198,7 +277,8 @@ export default function App() {
       <header className="top">
         <h1>Korrektur Wrapper</h1>
         <p className="lead">
-          Kapitel öffnen, prüfen, Stelle für Stelle entscheiden, dann speichern.
+          Kapitel öffnen, prüfen, Stelle für Stelle entscheiden. Vor dem
+          Speichern kannst du den Text noch anklicken und selbst tippen.
         </p>
         <div className="actions">
           <button
@@ -249,8 +329,8 @@ export default function App() {
       {reviewDone && (
         <p className="done">
           <span>
-            Alle Stellen sind durch. Über „Speichern unter“ die korrigierte Datei
-            lokal ablegen — das Original bleibt.
+            Alle Stellen sind durch. Du kannst den Text noch selbst ändern,
+            dann über „Speichern unter“ ablegen — das Original bleibt.
           </span>
           <UndoButton
             disabled={busy || decisions.length === 0}
@@ -262,6 +342,7 @@ export default function App() {
       <main
         className={currentFinding ? "paper paper-reviewing" : "paper"}
         ref={paperRef}
+        lang="de"
         aria-live="polite"
       >
         {!doc && (
@@ -278,6 +359,10 @@ export default function App() {
             corrected={corrected}
             skipped={skipped}
             currentId={currentFinding?.id ?? null}
+            editable={!busy}
+            editingIndex={editingIndex}
+            onEditingChange={setEditingIndex}
+            onCommit={commitParagraph}
           />
         )}
         {currentFinding && (
@@ -288,24 +373,27 @@ export default function App() {
               total={findings.length}
               canGoBack={decisions.length > 0}
               onBack={() => setDecisions((prev) => prev.slice(0, -1))}
-              onReplace={(value) =>
+              onReplace={(value) => {
+                clearEditForFinding(currentFinding);
                 setDecisions((prev) => [
                   ...prev,
                   { findingId: currentFinding.id, kind: "replace", value },
-                ])
-              }
-              onKeep={() =>
+                ]);
+              }}
+              onKeep={() => {
+                clearEditForFinding(currentFinding);
                 setDecisions((prev) => [
                   ...prev,
                   { findingId: currentFinding.id, kind: "keep" },
-                ])
-              }
-              onSkip={() =>
+                ]);
+              }}
+              onSkip={() => {
+                clearEditForFinding(currentFinding);
                 setDecisions((prev) => [
                   ...prev,
                   { findingId: currentFinding.id, kind: "skip" },
-                ])
-              }
+                ]);
+              }}
             />
           </div>
         )}

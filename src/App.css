@@ -317,6 +317,21 @@ mark.corrected {
   margin-top: 0;
 }
 
+.chapter-heading[contenteditable],
+.chapter-p[contenteditable] {
+  outline: none;
+  white-space: pre-wrap;
+  cursor: text;
+  caret-color: #1c1917;
+}
+
+.chapter-heading[contenteditable]:focus,
+.chapter-p[contenteditable]:focus {
+  background: #fff8e1;
+  border-radius: 0.35rem;
+  box-shadow: 0 0 0 3px #f5d76e;
+}
+
 .chapter-p {
   margin: 0 0 1rem;
 }

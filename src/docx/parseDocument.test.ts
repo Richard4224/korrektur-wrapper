@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { copyFileName, loadDocxFromBytes, pickDocxFile } from "./loadDocx";
-import { parseDocumentXml, plainText } from "./parseDocument";
+import { blockIndexAtOffset, parseDocumentXml, plainText } from "./parseDocument";
 
 const fixture = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -42,6 +42,14 @@ describe("Novemberlicht.docx", () => {
       .map((block) => block.runs.map((run) => run.text).join(""));
     expect(headings).toContain("I. Ankunft");
     expect(headings).toContain("V. Abschied, oder vielleicht auch net");
+
+    const fenserAt = text.indexOf("Fenser");
+    expect(blockIndexAtOffset(doc.blocks, fenserAt)).not.toBeNull();
+    expect(
+      doc.blocks[blockIndexAtOffset(doc.blocks, fenserAt) ?? -1].runs.some(
+        (run) => run.text.includes("Fenser"),
+      ),
+    ).toBe(true);
   });
 
   it("speichert unter einem neuen Dateinamen, Original bleibt", () => {

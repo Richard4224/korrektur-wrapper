@@ -4,9 +4,11 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import JSZip from "jszip";
 import {
+  applyParagraphText,
   applyReplacement,
   applyReplacements,
   expandReplacementRange,
+  firstLastDiff,
   plainTextFromDocumentXml,
 } from "./applyReplacement";
 import { documentXmlFromBytes } from "./loadDocx";
@@ -47,6 +49,24 @@ describe("expandReplacementRange", () => {
     expect(
       expandReplacementRange(haystack, located, "Fenser", "Fenster"),
     ).toEqual(located);
+  });
+});
+
+describe("firstLastDiff", () => {
+  it("findet eine Einfügung in der Mitte", () => {
+    expect(firstLastDiff("ein Mutprobe", "eine Mutprobe")).toEqual({
+      start: 3,
+      oldEnd: 3,
+      insert: "e",
+    });
+  });
+
+  it("findet eine Ersetzung", () => {
+    expect(firstLastDiff("Fenser", "Fenster")).toEqual({
+      start: 4,
+      oldEnd: 4,
+      insert: "t",
+    });
   });
 });
 
@@ -134,6 +154,36 @@ describe("Novemberlicht ersetzen", () => {
     const text = plainTextFromDocumentXml(next);
     expect(text).toContain("gewusst, dass es ein Fehler war");
     expect(text).toContain("festgschnürt hab, dass ich");
+  });
+
+  it("nimmt Tipp-Änderungen im Absatz auf und lässt Kursiv stehen", async () => {
+    const xml = await novemberlichtXml();
+    const blocks = parseDocumentXml(xml);
+    const index = blocks.findIndex((block) =>
+      block.runs.some((run) => run.text.includes("Fenser")),
+    );
+    expect(index).toBeGreaterThanOrEqual(0);
+    const old = blocks[index].runs.map((run) => run.text).join("");
+    const next = old.replace("Fenser", "Fenster");
+    const out = applyParagraphText(xml, index, next);
+    const text = plainTextFromDocumentXml(out);
+    expect(text).toContain("Fenster");
+    expect(text).not.toContain("Fenser");
+    expect(out).toMatch(/<w:i\/>[\s\S]{0,180}Zniachtl/);
+  });
+
+  it("fügt im Absatz ein Wort ein", async () => {
+    const xml = await novemberlichtXml();
+    const blocks = parseDocumentXml(xml);
+    const index = blocks.findIndex((block) =>
+      block.runs.map((run) => run.text).join("").includes("Wartehäusl"),
+    );
+    expect(index).toBeGreaterThanOrEqual(0);
+    const old = blocks[index].runs.map((run) => run.text).join("");
+    const at = old.indexOf("Wartehäusl");
+    const next = `${old.slice(0, at)}kleines ${old.slice(at)}`;
+    const out = applyParagraphText(xml, index, next);
+    expect(plainTextFromDocumentXml(out)).toContain("kleines Wartehäusl");
   });
 
   it("bleibt nach dem Packen als docx lesbar", async () => {
