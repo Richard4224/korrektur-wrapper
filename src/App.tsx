@@ -204,6 +204,14 @@ export default function App() {
           >
             Speichern unter
           </button>
+          <button
+            type="button"
+            className="btn"
+            disabled={busy || decisions.length === 0}
+            onClick={() => setDecisions((prev) => prev.slice(0, -1))}
+          >
+            Zurück
+          </button>
         </div>
         <input
           ref={inputRef}
@@ -222,7 +230,6 @@ export default function App() {
           finding={currentFinding}
           index={currentIndex}
           total={findings.length}
-          canGoBack={currentIndex > 0}
           onReplace={(value) =>
             setDecisions((prev) => [
               ...prev,
@@ -235,7 +242,6 @@ export default function App() {
               { findingId: currentFinding.id, kind: "keep" },
             ])
           }
-          onBack={() => setDecisions((prev) => prev.slice(0, -1))}
         />
       )}
 

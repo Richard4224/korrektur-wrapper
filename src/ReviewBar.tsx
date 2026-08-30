@@ -7,16 +7,12 @@ export function ReviewBar({
   total,
   onReplace,
   onKeep,
-  onBack,
-  canGoBack,
 }: {
   finding: Finding;
   index: number;
   total: number;
   onReplace: (value: string) => void;
   onKeep: () => void;
-  onBack: () => void;
-  canGoBack: boolean;
 }) {
   const [custom, setCustom] = useState("");
 
@@ -66,14 +62,6 @@ export function ReviewBar({
       <div className="actions">
         <button type="button" className="btn keep" onClick={onKeep}>
           Kein Fehler
-        </button>
-        <button
-          type="button"
-          className="btn"
-          disabled={!canGoBack}
-          onClick={onBack}
-        >
-          Zurück
         </button>
       </div>
     </section>
