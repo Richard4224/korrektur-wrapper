@@ -1,6 +1,10 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { chunkText } from "../src/proofread/chunk";
-import { modelAllowsTemperature, sanitizeModel } from "../src/proofread/models";
+import {
+  DEFAULT_MODEL,
+  modelAllowsTemperature,
+  sanitizeModel,
+} from "../src/proofread/models";
 import { normalizeFindings, SYSTEM_PROMPT } from "../src/proofread/normalize";
 import type { Finding } from "../src/proofread/types";
 
@@ -99,7 +103,9 @@ export async function handleProofread(
     return;
   }
 
-  const model = sanitizeModel(requestedModel || env.OPENAI_MODEL || "gpt-4o");
+  const model = sanitizeModel(
+    requestedModel || env.OPENAI_MODEL || DEFAULT_MODEL,
+  );
   try {
     const chunks = chunkText(text);
     const merged: Finding[] = [];

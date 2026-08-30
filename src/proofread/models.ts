@@ -1,17 +1,17 @@
 const STORAGE_KEY = "korrektur-wrapper-model";
 
 export const MODEL_OPTIONS = [
-  { id: "gpt-4o", label: "gpt-4o" },
-  { id: "gpt-4o-mini", label: "gpt-4o-mini" },
   { id: "gpt-4.1", label: "gpt-4.1" },
   { id: "gpt-4.1-mini", label: "gpt-4.1-mini" },
   { id: "gpt-4.1-nano", label: "gpt-4.1-nano" },
+  { id: "gpt-4o", label: "gpt-4o" },
+  { id: "gpt-4o-mini", label: "gpt-4o-mini" },
   { id: "gpt-5", label: "gpt-5" },
   { id: "gpt-5-mini", label: "gpt-5-mini" },
   { id: "o4-mini", label: "o4-mini" },
 ] as const;
 
-export const DEFAULT_MODEL = "gpt-4o";
+export const DEFAULT_MODEL = "gpt-4.1";
 
 export function sanitizeModel(value: string): string {
   const trimmed = value.trim();

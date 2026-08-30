@@ -19,6 +19,11 @@ describe("models", () => {
     expect(modelAllowsTemperature("o4-mini")).toBe(false);
   });
 
+  it("nimmt gpt-4.1, wenn noch nichts gewählt wurde", () => {
+    expect(DEFAULT_MODEL).toBe("gpt-4.1");
+    expect(loadModel()).toBe("gpt-4.1");
+  });
+
   it("merkt die Auswahl lokal", () => {
     saveModel("gpt-4o-mini");
     expect(loadModel()).toBe("gpt-4o-mini");
