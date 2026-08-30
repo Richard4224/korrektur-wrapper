@@ -73,6 +73,75 @@
   font-size: 1.1rem;
 }
 
+.status,
+.done {
+  margin: 1rem 0 0;
+  font-size: 1.1rem;
+}
+
+.done {
+  padding: 0.9rem 1rem;
+  background: #e8f5e9;
+  border-radius: 0.6rem;
+}
+
+.review {
+  margin: 0 0 1.25rem;
+  padding: 1.1rem 1.1rem 1.2rem;
+  background: #fff;
+  border: 2px solid #1c1917;
+  border-radius: 0.9rem;
+}
+
+.review-progress {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  color: #57534e;
+}
+
+.review-quote {
+  margin: 0 0 0.4rem;
+  font-size: 1.7rem;
+  font-weight: 700;
+}
+
+.review-reason {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  color: #44403c;
+}
+
+.custom-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.custom-input {
+  flex: 1 1 12rem;
+  min-height: 3.4rem;
+  padding: 0.6rem 0.9rem;
+  border: 2px solid #1c1917;
+  border-radius: 0.7rem;
+  font-size: 1.2rem;
+}
+
+.btn.keep {
+  background: #e8f5e9;
+}
+
+mark.finding {
+  background: #ffe58a;
+  padding: 0 0.12em;
+  color: inherit;
+}
+
+mark.finding.current {
+  background: #ffbf1a;
+  outline: 3px solid #1c1917;
+}
+
 .paper {
   background: #fffdf8;
   border: 1px solid #e7e0d4;

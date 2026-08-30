@@ -36,17 +36,21 @@ export function copyFileName(fileName: string): string {
   return fileName.replace(/\.docx$/i, "") + "_kopie.docx";
 }
 
-export function downloadUnchangedCopy(doc: LoadedDoc): void {
-  const copy = Uint8Array.from(doc.bytes);
+export function downloadDocx(fileName: string, bytes: Uint8Array): void {
+  const copy = Uint8Array.from(bytes);
   const blob = new Blob([copy], {
     type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = copyFileName(doc.fileName);
+  link.download = copyFileName(fileName);
   link.click();
   URL.revokeObjectURL(url);
+}
+
+export function downloadUnchangedCopy(doc: LoadedDoc): void {
+  downloadDocx(doc.fileName, doc.bytes);
 }
 
 export async function documentXmlFromBytes(bytes: Uint8Array): Promise<string> {
@@ -56,4 +60,17 @@ export async function documentXmlFromBytes(bytes: Uint8Array): Promise<string> {
     throw new Error("Das ist keine gültige Word-Datei (.docx).");
   }
   return documentFile.async("string");
+}
+
+export async function bytesWithDocumentXml(
+  original: Uint8Array,
+  xml: string,
+): Promise<Uint8Array> {
+  const zip = await JSZip.loadAsync(original);
+  zip.file("word/document.xml", xml);
+  return zip.generateAsync({
+    type: "uint8array",
+    compression: "DEFLATE",
+    compressionOptions: { level: 6 },
+  });
 }

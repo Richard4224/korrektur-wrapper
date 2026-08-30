@@ -32,3 +32,5 @@ npm run dev
 ```
 
 Im Browser die angezeigte Adresse als Lesezeichen speichern (meist `http://localhost:5173`). Testdatei: `test_material/Novemberlicht.docx`.
+
+Für die KI-Prüfung eine Datei `.env` anlegen (siehe `.env.example`) mit `OPENAI_API_KEY=...` und den Dev-Server danach neu starten. Der Schlüssel bleibt lokal und kommt nicht ins Git.
