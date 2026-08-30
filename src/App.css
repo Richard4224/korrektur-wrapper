@@ -1,7 +1,46 @@
 .page {
   max-width: 52rem;
   margin: 0 auto;
-  padding: 1.5rem 1.25rem 4rem;
+  padding: 1.5rem 4.5rem 4rem 1.25rem;
+}
+
+.undo-fab {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 30;
+  box-sizing: border-box;
+  width: 3.6rem;
+  height: 3.6rem;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 2px solid #1c1917;
+  border-radius: 999px;
+  background: #fff;
+  color: #1c1917;
+  box-shadow: 0 4px 16px rgba(28, 25, 23, 0.2);
+  cursor: pointer;
+}
+
+.undo-fab svg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.undo-fab:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.undo-fab:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.undo-fab:focus-visible {
+  outline: 3px solid #1c1917;
+  outline-offset: 3px;
 }
 
 .drop-overlay {

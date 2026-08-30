@@ -177,6 +177,32 @@ export default function App() {
       {dragging && (
         <div className="drop-overlay">Datei hier ablegen</div>
       )}
+      <button
+        type="button"
+        className="undo-fab"
+        disabled={busy || decisions.length === 0}
+        onClick={() => setDecisions((prev) => prev.slice(0, -1))}
+        aria-label="Letzte Entscheidung rückgängig machen"
+        title="Zurück"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M9.2 5.15A8.1 8.1 0 1 1 4.9 9.4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.35"
+            strokeLinecap="round"
+          />
+          <path
+            d="M9.35 2.7 5.4 5.35l3.7 3.05"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.35"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
       <header className="top">
         <h1>Korrektur Wrapper</h1>
         <p className="lead">
@@ -206,14 +232,6 @@ export default function App() {
             onClick={() => void onSave()}
           >
             Speichern unter
-          </button>
-          <button
-            type="button"
-            className="btn"
-            disabled={busy || decisions.length === 0}
-            onClick={() => setDecisions((prev) => prev.slice(0, -1))}
-          >
-            Zurück
           </button>
         </div>
         <ApiKeyPanel apiKey={apiKey} onSaved={setApiKey} />
