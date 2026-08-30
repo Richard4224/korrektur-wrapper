@@ -12,7 +12,7 @@ import {
 import { parseDocumentXml, plainText } from "./docx/parseDocument";
 import { pruefenKapitel } from "./proofread/api";
 import {
-  lastReplacementMark,
+  correctionMarks,
   replacementsFromDecisions,
   type Decision,
 } from "./proofread/decisions";
@@ -44,7 +44,7 @@ export default function App() {
     return { xml, blocks, text: plainText(blocks) };
   }, [doc, findings, decisions]);
 
-  const corrected = lastReplacementMark(findings, decisions);
+  const corrected = correctionMarks(findings, decisions);
 
   function resetReview() {
     setFindings([]);

@@ -6,7 +6,7 @@ import { applyReplacements } from "../docx/applyReplacement";
 import { documentXmlFromBytes } from "../docx/loadDocx";
 import { parseDocumentXml, plainText } from "../docx/parseDocument";
 import {
-  lastReplacementMark,
+  correctionMarks,
   replacementsFromDecisions,
 } from "./decisions";
 import type { Finding } from "./types";
@@ -44,18 +44,35 @@ describe("replacementsFromDecisions", () => {
     ]);
   });
 
-  it("zeigt die letzte Korrektur in der Vorschau anstelle des Fehlers", async () => {
+  it("markiert jede angenommene Korrektur, nicht nur die letzte", async () => {
     const xml = await documentXmlFromBytes(new Uint8Array(readFileSync(fixture)));
     const preview = parseDocumentXml(
-      applyReplacements(xml, replacementsFromDecisions(findings, [
-        { findingId: "f1", kind: "replace", value: "Fenster" },
-      ])),
+      applyReplacements(
+        xml,
+        replacementsFromDecisions(findings, [
+          { findingId: "f1", kind: "replace", value: "Fenster" },
+        ]),
+      ),
     );
-    const text = plainText(preview);
-    expect(text).toContain("aus dem Fenster gschaut");
-    expect(text).not.toContain("Fenser");
-    expect(lastReplacementMark(findings, [
-      { findingId: "f1", kind: "replace", value: "Fenster" },
-    ])?.quote).toBe("Fenster");
+    expect(plainText(preview)).toContain("aus dem Fenster gschaut");
+    expect(
+      correctionMarks(
+        [
+          ...findings,
+          {
+            id: "f2",
+            quote: "abgrissen",
+            prefix: "nie ",
+            suffix: " hab",
+            reason: "",
+            suggestions: ["abgerissen"],
+          },
+        ],
+        [
+          { findingId: "f1", kind: "replace", value: "Fenster" },
+          { findingId: "f2", kind: "replace", value: "abgerissen" },
+        ],
+      ).map((mark) => mark.quote),
+    ).toEqual(["Fenster", "abgerissen"]);
   });
 });

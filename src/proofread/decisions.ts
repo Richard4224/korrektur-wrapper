@@ -25,19 +25,20 @@ export function replacementsFromDecisions(
     .filter((item) => item.quote && item.replacement);
 }
 
-export function lastReplacementMark(
+export function correctionMarks(
   findings: Finding[],
   decisions: Decision[],
-): Finding | null {
-  const last = [...decisions]
-    .reverse()
-    .find((decision) => decision.kind === "replace" && decision.value);
-  if (!last?.value) return null;
-  const finding = findings.find((item) => item.id === last.findingId);
-  if (!finding) return null;
-  return {
-    ...finding,
-    id: "corrected",
-    quote: last.value,
-  };
+): Finding[] {
+  const marks: Finding[] = [];
+  for (const decision of decisions) {
+    if (decision.kind !== "replace" || !decision.value) continue;
+    const finding = findings.find((item) => item.id === decision.findingId);
+    if (!finding) continue;
+    marks.push({
+      ...finding,
+      id: `corrected-${finding.id}`,
+      quote: decision.value,
+    });
+  }
+  return marks;
 }

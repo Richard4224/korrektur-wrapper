@@ -15,7 +15,7 @@ function marksInBlock(
   blockLength: number,
   fullText: string,
   findings: Finding[],
-  corrected: Finding | null,
+  corrected: Finding[],
 ): Mark[] {
   const blockEnd = blockStart + blockLength;
   const marks: Mark[] = [];
@@ -35,7 +35,7 @@ function marksInBlock(
       kind,
     });
   };
-  if (corrected) add(corrected, "corrected");
+  for (const item of corrected) add(item, "corrected");
   for (const finding of findings) add(finding, "finding");
   return marks;
 }
@@ -84,7 +84,7 @@ function BlockView({
   blockStart: number;
   fullText: string;
   findings: Finding[];
-  corrected: Finding | null;
+  corrected: Finding[];
   currentId: string | null;
 }) {
   const Tag = block.kind === "heading" ? "h2" : "p";
@@ -138,7 +138,7 @@ export function ChapterView({
   blocks: Block[];
   fullText: string;
   findings: Finding[];
-  corrected: Finding | null;
+  corrected: Finding[];
   currentId: string | null;
 }) {
   let offset = 0;
