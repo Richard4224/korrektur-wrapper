@@ -33,4 +33,4 @@ npm run dev
 
 Im Browser die angezeigte Adresse als Lesezeichen speichern (meist `http://localhost:5173`). Testdatei: `test_material/Novemberlicht.docx`.
 
-Den API-Schlüssel oben auf der Seite einfügen (wird im Browser gespeichert) oder alternativ in `.env` legen (siehe `.env.example`). Der Schlüssel kommt nicht ins Git.
+Den API-Schlüssel oben auf der Seite speichern (Bearbeiten / Speichern). Er bleibt im Browser und kommt nicht ins Git. Alternativ geht weiterhin `.env`.

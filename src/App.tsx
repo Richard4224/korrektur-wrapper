@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChapterView } from "./ChapterView";
 import { ReviewBar } from "./ReviewBar";
+import { ApiKeyPanel } from "./ApiKeyPanel";
 import { applyReplacements } from "./docx/applyReplacement";
 import {
   bytesWithDocumentXml,
@@ -11,7 +12,7 @@ import {
 } from "./docx/loadDocx";
 import { parseDocumentXml, plainText } from "./docx/parseDocument";
 import { pruefenKapitel } from "./proofread/api";
-import { loadApiKey, saveApiKey } from "./proofread/apiKey";
+import { loadApiKey } from "./proofread/apiKey";
 import {
   correctionMarks,
   replacementsFromDecisions,
@@ -215,24 +216,7 @@ export default function App() {
             Zurück
           </button>
         </div>
-        <label className="api-key">
-          API-Schlüssel
-          <input
-            className="api-key-input"
-            value={apiKey}
-            autoComplete="off"
-            spellCheck={false}
-            placeholder="einfügen oder austauschen"
-            onChange={(event) => {
-              const value = event.target.value;
-              setApiKey(value);
-              saveApiKey(value.trim());
-            }}
-          />
-        </label>
-        <p className="api-hint">
-          Zum Austauschen einfach überschreiben. Bleibt nur auf diesem Rechner.
-        </p>
+        <ApiKeyPanel apiKey={apiKey} onSaved={setApiKey} />
         <input
           ref={inputRef}
           className="file-hidden"
