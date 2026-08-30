@@ -1,46 +1,7 @@
 .page {
   max-width: 52rem;
   margin: 0 auto;
-  padding: 1.5rem 4.5rem 4rem 1.25rem;
-}
-
-.undo-fab {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 30;
-  box-sizing: border-box;
-  width: 3.6rem;
-  height: 3.6rem;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  border: 2px solid #1c1917;
-  border-radius: 999px;
-  background: #fff;
-  color: #1c1917;
-  box-shadow: 0 4px 16px rgba(28, 25, 23, 0.2);
-  cursor: pointer;
-}
-
-.undo-fab svg {
-  width: 1.75rem;
-  height: 1.75rem;
-}
-
-.undo-fab:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.undo-fab:not(:disabled):hover {
-  transform: translateY(-1px);
-}
-
-.undo-fab:focus-visible {
-  outline: 3px solid #1c1917;
-  outline-offset: 3px;
+  padding: 1.5rem 1.25rem 4rem;
 }
 
 .drop-overlay {
@@ -179,17 +140,69 @@
 }
 
 .done {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
   padding: 0.9rem 1rem;
   background: #e8f5e9;
   border-radius: 0.6rem;
 }
 
 .review {
+  position: relative;
   margin: 0 0 1.25rem;
   padding: 1.1rem 1.1rem 1.2rem;
   background: #fff;
   border: 2px solid #1c1917;
   border-radius: 0.9rem;
+}
+
+.review-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.35rem;
+}
+
+.review-head .review-progress {
+  margin: 0;
+  padding-top: 0.35rem;
+}
+
+.undo-btn {
+  flex: none;
+  box-sizing: border-box;
+  width: 2.8rem;
+  height: 2.8rem;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 2px solid #1c1917;
+  border-radius: 999px;
+  background: #fff;
+  color: #1c1917;
+  cursor: pointer;
+}
+
+.undo-btn svg {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.undo-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.undo-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.undo-btn:focus-visible {
+  outline: 3px solid #1c1917;
+  outline-offset: 3px;
 }
 
 .review-progress {

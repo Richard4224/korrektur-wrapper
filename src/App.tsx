@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ChapterView } from "./ChapterView";
-import { ReviewBar } from "./ReviewBar";
+import { ReviewBar, UndoButton } from "./ReviewBar";
 import { ApiKeyPanel } from "./ApiKeyPanel";
 import { ModelSelect } from "./ModelSelect";
 import { applyReplacements } from "./docx/applyReplacement";
@@ -195,32 +195,6 @@ export default function App() {
       {dragging && (
         <div className="drop-overlay">Datei hier ablegen</div>
       )}
-      <button
-        type="button"
-        className="undo-fab"
-        disabled={busy || decisions.length === 0}
-        onClick={() => setDecisions((prev) => prev.slice(0, -1))}
-        aria-label="Letzte Entscheidung rückgängig machen"
-        title="Zurück"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            d="M9.2 5.15A8.1 8.1 0 1 1 4.9 9.4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.35"
-            strokeLinecap="round"
-          />
-          <path
-            d="M9.35 2.7 5.4 5.35l3.7 3.05"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.35"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
       <header className="top">
         <h1>Korrektur Wrapper</h1>
         <p className="lead">
@@ -274,8 +248,14 @@ export default function App() {
 
       {reviewDone && (
         <p className="done">
-          Alle Stellen sind durch. Über „Speichern unter“ die korrigierte Datei
-          lokal ablegen — das Original bleibt.
+          <span>
+            Alle Stellen sind durch. Über „Speichern unter“ die korrigierte Datei
+            lokal ablegen — das Original bleibt.
+          </span>
+          <UndoButton
+            disabled={busy || decisions.length === 0}
+            onClick={() => setDecisions((prev) => prev.slice(0, -1))}
+          />
         </p>
       )}
 
@@ -306,6 +286,8 @@ export default function App() {
               finding={currentFinding}
               index={currentIndex}
               total={findings.length}
+              canGoBack={decisions.length > 0}
+              onBack={() => setDecisions((prev) => prev.slice(0, -1))}
               onReplace={(value) =>
                 setDecisions((prev) => [
                   ...prev,
