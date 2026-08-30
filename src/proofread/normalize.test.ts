@@ -25,4 +25,22 @@ describe("normalizeFindings", () => {
       },
     ]);
   });
+
+  it("wirft Selbsttreffer wie Waliser→Waliser weg", () => {
+    const findings = normalizeFindings(
+      {
+        findings: [
+          {
+            quote: "Waliser",
+            prefix: "Die ",
+            suffix: " nennen",
+            reason: "Wahrscheinlich Tippfehler für Waliser",
+            suggestions: ["Walisischen", "Waleser"],
+          },
+        ],
+      },
+      "Die Waliser nennen das hiraeth.",
+    );
+    expect(findings).toEqual([]);
+  });
 });

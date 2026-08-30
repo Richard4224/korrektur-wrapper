@@ -1,5 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { chunkText } from "../src/proofread/chunk";
 import { normalizeFindings, SYSTEM_PROMPT } from "../src/proofread/normalize";
+import type { Finding } from "../src/proofread/types";
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -14,6 +16,47 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.end(JSON.stringify(body));
+}
+
+async function proofreadChunk(
+  chunk: string,
+  fullText: string,
+  apiKey: string,
+  model: string,
+): Promise<Finding[]> {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0.1,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "user",
+          content:
+            "Neue, unabhängige Prüfung. Nur dieser Abschnitt, ohne Bezug zu anderen Teilen:\n\n" +
+            chunk,
+        },
+      ],
+    }),
+    signal: AbortSignal.timeout(120_000),
+  });
+  const payload = (await response.json()) as {
+    error?: { message?: string };
+    choices?: { message?: { content?: string } }[];
+  };
+  if (!response.ok) {
+    throw new Error(
+      payload.error?.message || "Die KI hat nicht geantwortet.",
+    );
+  }
+  const content = payload.choices?.[0]?.message?.content ?? "{}";
+  return normalizeFindings(JSON.parse(content) as unknown, fullText);
 }
 
 export async function handleProofread(
@@ -49,41 +92,29 @@ export async function handleProofread(
 
   const model = env.OPENAI_MODEL || "gpt-4o";
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        temperature: 0.2,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: text },
-        ],
-      }),
-      signal: AbortSignal.timeout(120_000),
-    });
-    const payload = (await response.json()) as {
-      error?: { message?: string };
-      choices?: { message?: { content?: string } }[];
-    };
-    if (!response.ok) {
-      sendJson(res, 502, {
-        error:
-          payload.error?.message ||
-          "Die KI hat nicht geantwortet. Bitte später noch einmal versuchen.",
-      });
-      return;
+    const chunks = chunkText(text);
+    const merged: Finding[] = [];
+    const seen = new Set<string>();
+    for (const chunk of chunks) {
+      const part = await proofreadChunk(chunk, text, apiKey, model);
+      for (const finding of part) {
+        const key = `${finding.quote}|${finding.prefix}|${finding.suffix}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        merged.push(finding);
+      }
     }
-    const content = payload.choices?.[0]?.message?.content ?? "{}";
-    const parsed = JSON.parse(content) as unknown;
-    sendJson(res, 200, { findings: normalizeFindings(parsed) });
-  } catch {
-    sendJson(res, 502, {
-      error: "Die KI ist gerade nicht erreichbar. Bitte später noch einmal versuchen.",
+    sendJson(res, 200, {
+      findings: merged.map((finding, index) => ({
+        ...finding,
+        id: `f${index + 1}`,
+      })),
     });
+  } catch (caught) {
+    const message =
+      caught instanceof Error && caught.message
+        ? caught.message
+        : "Die KI ist gerade nicht erreichbar. Bitte später noch einmal versuchen.";
+    sendJson(res, 502, { error: message });
   }
 }
