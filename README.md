@@ -6,7 +6,7 @@ Jeder bringt einen **eigenen OpenAI-API-Schlüssel** mit. Es wird kein Schlüsse
 
 ## Öffentlich
 
-Die App liegt auf Cloudflare Pages. Ein Link reicht: die Oberfläche und die Prüfung (`/api/pruefen`) hängen an derselben Adresse. Die Function reicht nur den mitgebrachten Schlüssel an OpenAI durch.
+Die App liegt auf Cloudflare Pages: **https://korrektur-wrapper.pages.dev/**
 
 Impressum, Datenschutz sowie Nutzung und Kosten sind in der App verlinkt.
 
