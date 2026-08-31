@@ -45,6 +45,7 @@ export default function App() {
   const paperRef = useRef<HTMLElement>(null);
   const legalPage = useLegalPage();
   const [reviewTop, setReviewTop] = useState(0);
+  const [reviewLeft, setReviewLeft] = useState(16);
   const [paragraphEdits, setParagraphEdits] = useState<Record<number, string>>(
     {},
   );
@@ -202,12 +203,27 @@ export default function App() {
   useLayoutEffect(() => {
     if (!currentFinding) return;
     const mark = document.getElementById("finding-current");
-    const paper = paperRef.current;
-    if (!mark || !paper) return;
-    const markRect = mark.getBoundingClientRect();
-    const paperRect = paper.getBoundingClientRect();
-    setReviewTop(markRect.bottom - paperRect.top + 10);
-    mark.scrollIntoView({ block: "center", behavior: "smooth" });
+    if (mark) mark.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [currentFinding]);
+
+  useLayoutEffect(() => {
+    if (!currentFinding) return;
+    function placeCard() {
+      const mark = document.getElementById("finding-current");
+      const paper = paperRef.current;
+      if (!mark || !paper) return;
+      const markRect = mark.getBoundingClientRect();
+      const paperRect = paper.getBoundingClientRect();
+      setReviewTop(markRect.bottom + 10);
+      setReviewLeft(Math.max(8, paperRect.left + 16));
+    }
+    placeCard();
+    window.addEventListener("scroll", placeCard, true);
+    window.addEventListener("resize", placeCard);
+    return () => {
+      window.removeEventListener("scroll", placeCard, true);
+      window.removeEventListener("resize", placeCard);
+    };
   }, [currentFinding, preview?.text]);
 
   async function onPruefen() {
@@ -359,7 +375,7 @@ export default function App() {
         {!doc && (
           <p className="empty">
             Noch keine Datei. Über „Datei öffnen“ eine .docx wählen oder die
-            Datei ins Fenster ziehen — zum Testen eignet sich Novemberlicht.
+            Datei ins Fenster ziehen.
           </p>
         )}
         {doc && preview && (
@@ -377,7 +393,7 @@ export default function App() {
           />
         )}
         {currentFinding && (
-          <ReviewFloat top={reviewTop} resetKey={currentFinding.id}>
+          <ReviewFloat top={reviewTop} left={reviewLeft} resetKey={currentFinding.id}>
             <ReviewBar
               finding={currentFinding}
               index={currentIndex}

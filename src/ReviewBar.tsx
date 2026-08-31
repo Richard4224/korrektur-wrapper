@@ -4,14 +4,14 @@ import type { Finding } from "./proofread/types";
 export function clampReviewShift(
   shift: { x: number; y: number },
   card: { width: number; height: number },
-  paper: { width: number; height: number },
+  viewport: { width: number; height: number },
   base: { left: number; top: number },
   margin = 8,
 ): { x: number; y: number } {
   const minX = margin - base.left;
-  const maxX = paper.width - margin - card.width - base.left;
+  const maxX = viewport.width - margin - card.width - base.left;
   const minY = margin - base.top;
-  const maxY = paper.height - margin - card.height - base.top;
+  const maxY = viewport.height - margin - card.height - base.top;
   return {
     x: clampNumber(shift.x, minX, maxX),
     y: clampNumber(shift.y, minY, maxY),
@@ -26,10 +26,12 @@ function clampNumber(value: number, min: number, max: number): number {
 
 export function ReviewFloat({
   top,
+  left = 16,
   resetKey,
   children,
 }: {
   top: number;
+  left?: number;
   resetKey?: string;
   children: ReactNode;
 }) {
@@ -52,15 +54,13 @@ export function ReviewFloat({
 
   function clamped(next: { x: number; y: number }) {
     const box = boxRef.current;
-    const paper = box?.offsetParent;
-    if (!(box instanceof HTMLElement) || !(paper instanceof HTMLElement)) {
-      return next;
-    }
+    if (!(box instanceof HTMLElement)) return next;
+    const rect = box.getBoundingClientRect();
     return clampReviewShift(
       next,
       { width: box.offsetWidth, height: box.offsetHeight },
-      { width: paper.clientWidth, height: paper.clientHeight },
-      { left: box.offsetLeft, top: box.offsetTop },
+      { width: window.innerWidth, height: window.innerHeight },
+      { left: rect.left - shift.x, top: rect.top - shift.y },
     );
   }
 
@@ -107,6 +107,7 @@ export function ReviewFloat({
       className={dragging ? "review-float is-dragging" : "review-float"}
       style={{
         top,
+        left,
         transform: `translate(${shift.x}px, ${shift.y}px)`,
       }}
       onPointerDown={onPointerDown}

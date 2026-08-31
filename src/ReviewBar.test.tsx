@@ -7,7 +7,18 @@ import { clampReviewShift, ReviewFloat } from "./ReviewBar";
   true;
 
 describe("clampReviewShift", () => {
-  it("lässt Platz zum Beiseiteschieben und hält das Fenster im Blatt", () => {
+  it("lässt das Fenster über den Dokumentrand in den Bildschirm schieben", () => {
+    expect(
+      clampReviewShift(
+        { x: 500, y: -20 },
+        { width: 320, height: 200 },
+        { width: 1200, height: 800 },
+        { left: 100, top: 80 },
+      ),
+    ).toEqual({ x: 500, y: -20 });
+  });
+
+  it("hält das Fenster im sichtbaren Bereich", () => {
     expect(
       clampReviewShift(
         { x: 400, y: -20 },
@@ -27,7 +38,7 @@ describe("clampReviewShift", () => {
     ).toEqual({ x: 456, y: 312 });
   });
 
-  it("hält ein zu großes Fenster mittig im Blatt", () => {
+  it("hält ein zu großes Fenster mittig im Bildschirm", () => {
     expect(
       clampReviewShift(
         { x: 50, y: 50 },
