@@ -382,3 +382,73 @@ mark.corrected {
   font-size: 1.7rem;
   font-weight: 700;
 }
+
+.hint {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #44403c;
+}
+
+.hint a,
+.legal a,
+.site-footer a {
+  color: #1d4e89;
+}
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e7e0d4;
+}
+
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.8rem;
+  padding: 0.35rem 0.7rem;
+  font-size: 1.1rem;
+}
+
+.legal {
+  background: #fffdf8;
+  border: 1px solid #e7e0d4;
+  border-radius: 0.9rem;
+  padding: 1.5rem 1.5rem 2rem;
+  font-size: 1.12rem;
+  line-height: 1.6;
+}
+
+.legal h1 {
+  margin: 0 0 1rem;
+  font-size: 1.85rem;
+}
+
+.legal h2 {
+  margin: 1.6rem 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.legal p,
+.legal li {
+  margin: 0 0 0.85rem;
+}
+
+.legal-back {
+  margin: 0 0 1.25rem;
+}
+
+.legal-back .btn {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: #1c1917;
+}
+
+.legal-stand {
+  margin: 1.75rem 0 0;
+  color: #57534e;
+  font-size: 1rem;
+}

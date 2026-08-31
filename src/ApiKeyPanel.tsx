@@ -52,6 +52,11 @@ export function ApiKeyPanel({
           onChange={(event) => setDraft(event.target.value)}
         />
       </label>
+      <p className="hint">
+        Eigenen OpenAI-Schlüssel verwenden. Kosten entstehen bei OpenAI. Die KI
+        kann Fehler machen.{" "}
+        <a href="#nutzung">Nutzung und Kosten</a>
+      </p>
       <div className="actions">
         <button
           type="button"

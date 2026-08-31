@@ -28,6 +28,7 @@ import {
   type Decision,
 } from "./proofread/decisions";
 import type { Finding } from "./proofread/types";
+import { LegalPages, SiteFooter, useLegalPage } from "./LegalPages";
 import "./App.css";
 
 export default function App() {
@@ -42,6 +43,7 @@ export default function App() {
   const [apiKey, setApiKey] = useState(() => loadApiKey());
   const [model, setModel] = useState(() => loadModel());
   const paperRef = useRef<HTMLElement>(null);
+  const legalPage = useLegalPage();
   const [reviewTop, setReviewTop] = useState(0);
   const [paragraphEdits, setParagraphEdits] = useState<Record<number, string>>(
     {},
@@ -269,6 +271,15 @@ export default function App() {
     }
   }
 
+  if (legalPage) {
+    return (
+      <div className="page">
+        <LegalPages page={legalPage} />
+        <SiteFooter />
+      </div>
+    );
+  }
+
   return (
     <div className="page">
       {dragging && (
@@ -398,6 +409,7 @@ export default function App() {
           </ReviewFloat>
         )}
       </main>
+      <SiteFooter />
     </div>
   );
 }
