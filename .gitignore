@@ -12,6 +12,8 @@ __pycache__/
 
 # Build / cache
 dist/
+.wrangler/
+.dev.vars
 build/
 .cache/
 .next/
